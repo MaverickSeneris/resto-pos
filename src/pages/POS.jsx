@@ -2,7 +2,9 @@ import { useEffect, useState, useRef } from "react";
 import { sampleMenu } from "../data/sampleMenu.js";
 import { tables } from "../data/tables.js";
 
-const CATEGORIES = ["Meals", "Drinks", "Ala Carte"];
+const allMenuItems = JSON.parse(localStorage.getItem("menu") || "[]");
+const CATEGORIES = [...new Set(allMenuItems.map((item) => item.category))];
+
 
 export default function POS() {
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
@@ -19,6 +21,31 @@ export default function POS() {
   });
   const confirmBtnRef = useRef(null);
 
+  const [menu, setMenu] = useState(() => {
+    return JSON.parse(localStorage.getItem("menu") || "[]");
+  });
+
+  useEffect(() => {
+    const storedMenu = JSON.parse(localStorage.getItem("menu") || "[]");
+    setMenu(storedMenu);
+  }, []);
+
+  useEffect(() => {
+    const syncMenu = () => {
+      const latestMenu = JSON.parse(localStorage.getItem("menu") || "[]");
+      setMenu(latestMenu);
+    };
+    window.addEventListener("storage", syncMenu);
+    return () => window.removeEventListener("storage", syncMenu);
+  }, []);
+
+
+  const filteredMenu = menu.filter(
+    (item) =>
+      item.category === category &&
+      item.name.toLowerCase().includes(search.toLowerCase())
+  );
+
   useEffect(() => {
     localStorage.setItem("orders", JSON.stringify(orders));
   }, [orders]);
@@ -26,12 +53,6 @@ export default function POS() {
   useEffect(() => {
     localStorage.setItem("selectedTable", JSON.stringify(selectedTable));
   }, [selectedTable]);
-
-  const filteredMenu = sampleMenu.filter(
-    (item) =>
-      item.category === category &&
-      item.name.toLowerCase().includes(search.toLowerCase())
-  );
 
   useEffect(() => {
     const handleEsc = (e) => {
@@ -382,6 +403,7 @@ export default function POS() {
           </div>
         </div>
       )}
+  
     </div>
   );
 }
