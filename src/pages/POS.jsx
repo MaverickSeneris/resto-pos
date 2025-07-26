@@ -5,6 +5,7 @@ import { tables } from "../data/tables.js";
 const CATEGORIES = ["Meals", "Drinks", "Ala Carte"];
 
 export default function POS() {
+  const [cash, setCash] = useState("");
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("Meals");
 
@@ -50,14 +51,23 @@ export default function POS() {
 
   const completeSale = () => {
     if (!selectedTable) return;
+
     const tableOrders = orders[selectedTable.id] || [];
+    const total = tableOrders.reduce((acc, item) => acc + item.price, 0);
+    const paidAmount = parseFloat(cash);
+
+    if (isNaN(paidAmount) || paidAmount < total) {
+      return alert("Insufficient cash payment.");
+    }
 
     const receipt = {
       id: Date.now(),
       items: tableOrders,
       table: selectedTable.name,
       date: new Date().toISOString(),
-      total: tableOrders.reduce((acc, item) => acc + item.price, 0),
+      total,
+      cash: paidAmount,
+      change: paidAmount - total,
     };
 
     const history = JSON.parse(localStorage.getItem("sales") || "[]");
@@ -66,6 +76,7 @@ export default function POS() {
 
     const updatedOrders = { ...orders, [selectedTable.id]: [] };
     setOrders(updatedOrders);
+    setCash(""); // reset cash input
   };
 
   const removeOneItem = (itemId) => {
@@ -94,7 +105,6 @@ export default function POS() {
       [tableId]: updatedOrders,
     }));
   };
-
 
   return (
     <div className="p-4">
@@ -207,9 +217,53 @@ export default function POS() {
                 0
               )}
             </p>
+            <div className="mt-2 space-y-2">
+              <div>
+                <label className="block text-sm font-medium">
+                  Cash Payment:
+                </label>
+                <input
+                  type="number"
+                  className="border p-2 w-full mt-1"
+                  value={cash}
+                  onChange={(e) => setCash(e.target.value)}
+                  placeholder="Enter cash amount"
+                />
+              </div>
+              <p className="text-sm">
+                Change:{" "}
+                <span className="font-bold">
+                  ₱
+                  {Math.max(
+                    0,
+                    (parseFloat(cash) || 0) -
+                      (orders[selectedTable.id] || []).reduce(
+                        (acc, item) => acc + item.price,
+                        0
+                      )
+                  )}
+                </span>
+              </p>
+            </div>
+
             <button
               onClick={completeSale}
-              className="mt-3 px-4 py-2 bg-green-600 text-white rounded"
+              className={`mt-3 px-4 py-2 text-white rounded ${
+                parseFloat(cash) >=
+                (orders[selectedTable.id] || []).reduce(
+                  (acc, item) => acc + item.price,
+                  0
+                )
+                  ? "bg-green-600 hover:bg-green-700"
+                  : "bg-gray-400 cursor-not-allowed"
+              }`}
+              disabled={
+                parseFloat(cash) <
+                (orders[selectedTable.id] || []).reduce(
+                  (acc, item) => acc + item.price,
+                  0
+                )
+              }
             >
               Checkout
             </button>
