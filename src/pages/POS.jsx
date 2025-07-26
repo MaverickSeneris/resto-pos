@@ -1,23 +1,23 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { sampleMenu } from "../data/sampleMenu.js";
 import { tables } from "../data/tables.js";
 
 const CATEGORIES = ["Meals", "Drinks", "Ala Carte"];
 
 export default function POS() {
+  const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   const [cash, setCash] = useState("");
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("Meals");
-
   const [orders, setOrders] = useState(() => {
     const saved = localStorage.getItem("orders");
     return saved ? JSON.parse(saved) : {};
   });
-
   const [selectedTable, setSelectedTable] = useState(() => {
     const saved = localStorage.getItem("selectedTable");
     return saved ? JSON.parse(saved) : null;
   });
+  const confirmBtnRef = useRef(null);
 
   useEffect(() => {
     localStorage.setItem("orders", JSON.stringify(orders));
@@ -32,6 +32,14 @@ export default function POS() {
       item.category === category &&
       item.name.toLowerCase().includes(search.toLowerCase())
   );
+
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === "Escape") setIsSummaryOpen(false);
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, []);
 
   const handleOrder = (item) => {
     if (!selectedTable) return alert("Select a table first");
@@ -77,6 +85,8 @@ export default function POS() {
     const updatedOrders = { ...orders, [selectedTable.id]: [] };
     setOrders(updatedOrders);
     setCash(""); // reset cash input
+
+    alert("✅ Payment received and recorded in sales.");
   };
 
   const removeOneItem = (itemId) => {
@@ -104,6 +114,21 @@ export default function POS() {
       ...prev,
       [tableId]: updatedOrders,
     }));
+  };
+
+  const openSummaryModal = () => {
+    const total = (orders[selectedTable.id] || []).reduce(
+      (acc, item) => acc + item.price,
+      0
+    );
+    const paid = parseFloat(cash);
+    if (isNaN(paid) || paid < total) {
+      return alert("Please input the exact or excess amount.");
+    }
+    if ((orders[selectedTable.id] || []).length === 0) {
+      return alert("No items ordered yet.");
+    }
+    setIsSummaryOpen(true);
   };
 
   return (
@@ -245,9 +270,9 @@ export default function POS() {
                 </span>
               </p>
             </div>
-
             <button
-              onClick={completeSale}
+              // onClick={() => setIsSummaryOpen(true)}
+              onClick={openSummaryModal}
               className={`mt-3 px-4 py-2 text-white rounded ${
                 parseFloat(cash) >=
                 (orders[selectedTable.id] || []).reduce(
@@ -269,6 +294,93 @@ export default function POS() {
             </button>
           </div>
         </>
+      )}
+
+      {isSummaryOpen && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 w-full max-w-md shadow-xl transition-all duration-300 animate-fadeIn">
+            <h2 className="text-2xl font-semibold mb-1 text-gray-800 dark:text-white">
+              Order Summary
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+              <span className="font-semibold text-xl">
+                {selectedTable?.name}
+              </span>
+            </p>
+
+            <ul className="mb-4 space-y-2 text-sm text-gray-700 dark:text-gray-300">
+              {Object.entries(
+                (orders[selectedTable.id] || []).reduce((acc, item) => {
+                  const key = item.id;
+                  if (!acc[key]) acc[key] = { ...item, quantity: 1 };
+                  else acc[key].quantity += 1;
+                  return acc;
+                }, {})
+              ).map(([id, item]) => (
+                <li
+                  key={id}
+                  className="flex justify-between border-b pb-1 text-sm"
+                >
+                  <span>
+                    {item.name} x{item.quantity}
+                  </span>
+                  <span className="font-medium">
+                    ₱{item.price * item.quantity}
+                  </span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="space-y-1 text-sm">
+              <p className="font-medium text-gray-700 dark:text-gray-200">
+                Cash: <span className="font-semibold">₱{cash}</span>
+              </p>
+              <p className="font-medium text-gray-700 dark:text-gray-200">
+                Total:{" "}
+                <span className="font-semibold">
+                  ₱
+                  {(orders[selectedTable.id] || []).reduce(
+                    (acc, item) => acc + item.price,
+                    0
+                  )}
+                </span>
+              </p>
+              <p className="font-medium text-green-700 dark:text-green-400">
+                Change:{" "}
+                <span className="font-semibold">
+                  ₱
+                  {Math.max(
+                    0,
+                    (parseFloat(cash) || 0) -
+                      (orders[selectedTable.id] || []).reduce(
+                        (acc, item) => acc + item.price,
+                        0
+                      )
+                  )}
+                </span>
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setIsSummaryOpen(false)}
+                className="px-4 py-2 rounded-md border border-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm text-white bg-red-500"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  completeSale();
+                  setIsSummaryOpen(false);
+                }}
+                ref={confirmBtnRef}
+                className="px-4 py-2 rounded-md bg-green-600 hover:bg-green-700 text-white text-sm font-semibold"
+              >
+                Confirm Payment
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
