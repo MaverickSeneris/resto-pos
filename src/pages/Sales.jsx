@@ -14,6 +14,19 @@ export default function SalesHistory() {
     ? sales.filter((sale) => sale.date.startsWith(filterDate))
     : sales;
 
+    const deleteSale = (id) => {
+      const password = prompt("Enter admin password to delete:");
+      if (password !== "admin123") {
+        alert("Wrong password.");
+        return;
+      }
+
+      const updated = sales.filter((sale) => sale.id !== id);
+      localStorage.setItem("sales", JSON.stringify(updated));
+      setSales(updated);
+    };
+
+
   return (
     <div className="p-4">
       <input
@@ -41,6 +54,12 @@ export default function SalesHistory() {
               <p>Change: ₱{sale.change}</p>
             </>
           )}
+          <button
+            onClick={() => deleteSale(sale.id)}
+            className="mt-2 px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
+          >
+            🗑 Delete Sale
+          </button>
         </div>
       ))}
     </div>
