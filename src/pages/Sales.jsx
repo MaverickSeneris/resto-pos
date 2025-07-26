@@ -35,6 +35,12 @@ export default function SalesHistory() {
             ))}
           </ul>
           <p className="font-bold mt-2">Total: ₱{sale.total}</p>
+          {sale.cash !== undefined && (
+            <>
+              <p>Cash: ₱{sale.cash}</p>
+              <p>Change: ₱{sale.change}</p>
+            </>
+          )}
         </div>
       ))}
     </div>
