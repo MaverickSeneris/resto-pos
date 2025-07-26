@@ -73,7 +73,7 @@ export default function SalesHistory() {
             <input
               type="password"
               className="w-full border p-2 mb-4 rounded"
-              placeholder="Enter admin123"
+              placeholder="Enter Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -81,7 +81,7 @@ export default function SalesHistory() {
               <button
                 onClick={() => {
                   setDeleteId(null);
-                  setPassword("");
+                  setPassword("");git 
                 }}
                 className="px-4 py-2 border rounded text-sm"
               >
