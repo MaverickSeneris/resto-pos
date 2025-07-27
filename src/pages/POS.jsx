@@ -10,6 +10,7 @@ export default function POS() {
   const [cash, setCash] = useState("");
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("Meals");
+  const [showTableDrawer, setShowTableDrawer] = useState(false);
   const [orders, setOrders] = useState(() => {
     const saved = localStorage.getItem("orders");
     return saved ? JSON.parse(saved) : {};
@@ -268,35 +269,51 @@ export default function POS() {
       </div>
 
       {/* Table selection */}
-      <div className="bg-white border-t p-4 sticky bottom-0 z-30 shadow-inner">
-        <h2 className="text-lg font-semibold mb-2">Select Table:</h2>
-        <div className="flex flex-wrap gap-2">
-          {tables.map((table) => {
-            const isOccupied = (orders[table.id]?.length ?? 0) > 0;
-            return (
-              <button
-                key={table.id}
-                className={`text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded border transition-all duration-300 ${
-                  selectedTable?.id === table.id
-                    ? "bg-blue-600 text-white"
-                    : isOccupied
-                    ? "bg-red-500 text-white"
-                    : "bg-white"
-                }`}
-                onClick={() => setSelectedTable(table)}
-              >
-                <div className="font-semibold">{table.name}</div>
-                <div
-                  className={`text-xs ${
-                    isOccupied ? "text-white" : "text-green-600"
-                  }`}
-                >
-                  {isOccupied ? "Occupied" : "Vacant"}
-                </div>
-              </button>
-            );
-          })}
+      {/* Table Drawer */}
+      <div className="bg-white border-t sticky bottom-0 z-30 shadow-inner">
+        <div className="p-4 flex justify-between items-center">
+          <h2 className="text-lg font-semibold">
+            You're on {selectedTable?.name || "None"}
+          </h2>
+          <button
+            onClick={() => setShowTableDrawer((prev) => !prev)}
+            className="text-sm px-3 py-1 border rounded bg-blue-600 text-white"
+          >
+            {showTableDrawer ? "Hide Tables" : "Show Tables"}
+          </button>
         </div>
+
+        {showTableDrawer && (
+          <div className="p-4 border-t animate-slideDown">
+            <div className="flex flex-wrap gap-2">
+              {tables.map((table) => {
+                const isOccupied = (orders[table.id]?.length ?? 0) > 0;
+                return (
+                  <button
+                    key={table.id}
+                    className={`text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded border transition-all duration-300 ${
+                      selectedTable?.id === table.id
+                        ? "bg-blue-600 text-white"
+                        : isOccupied
+                        ? "bg-red-500 text-white"
+                        : "bg-white"
+                    }`}
+                    onClick={() => setSelectedTable(table)}
+                  >
+                    <div className="font-semibold">{table.name}</div>
+                    <div
+                      className={`text-xs ${
+                        isOccupied ? "text-white" : "text-green-600"
+                      }`}
+                    >
+                      {isOccupied ? "Occupied" : "Vacant"}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Modal for printing */}
