@@ -60,10 +60,39 @@ export default function POS() {
     });
   };
 
+  const removeOneItem = (itemId) => {
+    const tableId = selectedTable.id;
+    const tableOrders = orders[tableId] || [];
+    const index = tableOrders.findIndex((item) => item.id === itemId);
+    if (index === -1) return;
+
+    const updatedOrders = [...tableOrders];
+    updatedOrders.splice(index, 1);
+
+    setOrders((prev) => ({
+      ...prev,
+      [tableId]: updatedOrders,
+    }));
+  };
+
+  const removeAllItems = (itemId) => {
+    const tableId = selectedTable.id;
+    const tableOrders = orders[tableId] || [];
+    const updatedOrders = tableOrders.filter((item) => item.id !== itemId);
+    setOrders((prev) => ({
+      ...prev,
+      [tableId]: updatedOrders,
+    }));
+  };
+
   const completeSale = () => {
     if (!selectedTable) return;
 
     const tableOrders = orders[selectedTable.id] || [];
+    if (tableOrders.length === 0) {
+      return alert("No orders to checkout.");
+    }
+
     const total = tableOrders.reduce((acc, item) => acc + item.price, 0);
     const paidAmount = parseFloat(cash);
 
@@ -121,10 +150,23 @@ export default function POS() {
           {item.name} x{item.quantity}
         </span>
         <span className="font-semibold">₱{item.price * item.quantity}</span>
+        <div className="flex gap-2 ml-2">
+          <button
+            onClick={() => removeOneItem(item.id)}
+            className="text-yellow-600 text-xs"
+          >
+            🗑 One
+          </button>
+          <button
+            onClick={() => removeAllItems(item.id)}
+            className="text-red-600 text-xs"
+          >
+            ❌ All
+          </button>
+        </div>
       </li>
     ));
   };
-
   return (
     <div className="flex flex-col min-h-screen">
       {/* Categories and search bar */}
@@ -195,11 +237,19 @@ export default function POS() {
               </p>
               <div className="flex gap-2 mt-4">
                 <button
+                  disabled={
+                    !selectedTable || !(orders[selectedTable?.id]?.length > 0)
+                  }
                   onClick={() => setIsCheckoutOpen(true)}
-                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 w-full"
+                  className={`px-4 py-2 text-white rounded w-full transition-colors duration-200 ${
+                    !selectedTable || !(orders[selectedTable?.id]?.length > 0)
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-green-600 hover:bg-green-700"
+                  }`}
                 >
-                  ✅ Checkout
+                  Checkout
                 </button>
+
                 <button
                   onClick={printBill}
                   className={`px-4 py-2 border rounded w-full ${
@@ -226,7 +276,7 @@ export default function POS() {
             return (
               <button
                 key={table.id}
-                className={`px-4 py-2 rounded border transition-all duration-300 ${
+                className={`text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded border transition-all duration-300 ${
                   selectedTable?.id === table.id
                     ? "bg-blue-600 text-white"
                     : isOccupied
@@ -235,7 +285,7 @@ export default function POS() {
                 }`}
                 onClick={() => setSelectedTable(table)}
               >
-                <div className="text-sm font-semibold">{table.name}</div>
+                <div className="font-semibold">{table.name}</div>
                 <div
                   className={`text-xs ${
                     isOccupied ? "text-white" : "text-green-600"
