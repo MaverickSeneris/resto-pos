@@ -134,73 +134,78 @@ export default function ProductManagement() {
   };
 
   return (
-    <div className="p-4">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">Product List</h2>
-        <div className="flex gap-2">
-          <button
-            onClick={handleReset}
-            className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700"
-          >
-            Reset Menu
-          </button>
-          <button
-            onClick={handleResetToDefault}
-            className="bg-yellow-600 text-white px-3 py-1 rounded text-sm hover:bg-yellow-700"
-          >
-            Load Default Menu
-          </button>
-        </div>
-      </div>
-
-      {/* Search */}
-      <input
-        type="text"
-        placeholder="Search products..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="mb-4 p-2 border rounded w-full"
-      />
-
-      {/* Category Controls */}
-      <div className="mb-4">
-        <div className="flex justify-between items-center mb-2">
-          <h3 className="font-semibold">Categories</h3>
-          {!isDeletingCategory ? (
+    // <div className="p-4">
+    <div className="p-4 flex flex-col md:flex-row gap-4">
+      <div className="flex-1">
+        {/* everything before Add Product section goes here */}
+        {/* Header */}
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">Product List</h2>
+          <div className="flex gap-2">
             <button
-              onClick={() => {
-                const pwd = prompt("Enter admin password to delete category:");
-                if (pwd === "admin123") {
-                  setIsDeletingCategory(true);
-                } else {
-                  alert("❌ Wrong password.");
+              onClick={handleReset}
+              className="ml-2 w-15 h-8 bg-red-600 font-bold text-white px-3 py-1 rounded text-[0.5rem] hover:bg-red-700"
+            >
+              Reset Menu
+            </button>
+            <button
+              onClick={handleResetToDefault}
+              className="w-15 h-8 bg-green-400 font-bold text-white px-3 py-1 rounded text-[0.5rem] hover:bg-yellow-700"
+            >
+              Default Menu
+            </button>
+          </div>
+        </div>
+
+        {/* Search */}
+        <input
+          type="text"
+          placeholder="Search products..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="mb-4 p-2 border rounded w-full"
+        />
+
+        {/* Category Controls */}
+        <div className="mb-4">
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="font-semibold">Categories</h3>
+            {!isDeletingCategory ? (
+              <button
+                onClick={() => {
+                  const pwd = prompt(
+                    "Enter admin password to delete category:"
+                  );
+                  if (pwd === "admin123") {
+                    setIsDeletingCategory(true);
+                  } else {
+                    alert("❌ Wrong password.");
+                  }
+                }}
+                className="text-xs text-green-600 hover:underline"
+              >
+                Manage Categories
+              </button>
+            ) : (
+              <button
+                onClick={() => setIsDeletingCategory(false)}
+                className="text-sm text-gray-500 hover:underline"
+              >
+                ✖ Cancel
+              </button>
+            )}
+          </div>
+
+          <div className="flex gap-2 flex-wrap">
+            {[...categories].map((cat) => (
+              <button
+                key={cat}
+                onClick={() =>
+                  isDeletingCategory
+                    ? handleDeleteCategory(cat)
+                    : setSelectedCategory(cat)
                 }
-              }}
-              className="text-xs text-green-600 hover:underline"
-            >
-              Manage Categories
-            </button>
-          ) : (
-            <button
-              onClick={() => setIsDeletingCategory(false)}
-              className="text-sm text-gray-500 hover:underline"
-            >
-              ✖ Cancel
-            </button>
-          )}
-        </div>
-
-        <div className="flex gap-2 flex-wrap">
-          {[...categories].map((cat) => (
-            <button
-              key={cat}
-              onClick={() =>
-                isDeletingCategory
-                  ? handleDeleteCategory(cat)
-                  : setSelectedCategory(cat)
-              }
-              className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm border transition
+                className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm border transition
           ${
             selectedCategory === cat && !isDeletingCategory
               ? "bg-blue-600 text-white"
@@ -208,11 +213,12 @@ export default function ProductManagement() {
               ? "bg-red-100 text-red-700 hover:bg-red-200"
               : "bg-white text-black hover:bg-gray-100"
           }`}
-            >
-              {cat}
-              {isDeletingCategory && cat !== "All" && <span>🗑</span>}
-            </button>
-          ))}
+              >
+                {cat}
+                {isDeletingCategory && cat !== "All" && <span>🗑</span>}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -260,62 +266,69 @@ export default function ProductManagement() {
       </ul>
 
       {/* Add Product */}
-      <div className="space-y-2">
-        <input
-          type="text"
-          placeholder="Product name"
-          value={newProduct.name}
-          onChange={(e) =>
-            setNewProduct((prev) => ({ ...prev, name: e.target.value }))
-          }
-          className="border p-2 w-full"
-        />
-        <input
-          type="number"
-          placeholder="Price"
-          value={newProduct.price}
-          onChange={(e) =>
-            setNewProduct((prev) => ({ ...prev, price: e.target.value }))
-          }
-          className="border p-2 w-full"
-        />
-        <select
-          value={newProduct.category}
-          onChange={(e) => {
-            if (e.target.value === "__custom") {
-              const newCat = prompt("Enter new category:");
-              if (newCat) {
-                // Update categories
-                const updatedCategories = [...new Set([...categories, newCat])];
-                setCategories(updatedCategories);
-                localStorage.setItem(
-                  "categories",
-                  JSON.stringify(updatedCategories)
-                );
-
-                // Set selected new category
-                setNewProduct((prev) => ({ ...prev, category: newCat }));
-              }
-            } else {
-              setNewProduct((prev) => ({ ...prev, category: e.target.value }));
+      <div className="md:w-[300px] md:sticky md:top-20 fixed bottom-0 left-0 w-full bg-white border-t md:border md:rounded-lg p-4 shadow-lg z-30">
+        <h3 className="text-lg font-semibold mb-2 hidden md:block">
+          ➕ Add Product
+        </h3>
+        <div className="space-y-2">
+          <input
+            type="text"
+            placeholder="Product name"
+            value={newProduct.name}
+            onChange={(e) =>
+              setNewProduct((prev) => ({ ...prev, name: e.target.value }))
             }
-          }}
-          className="border p-2 w-full"
-        >
-          {categories.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat}
-            </option>
-          ))}
-          <option value="__custom">➕ Add New Category</option>
-        </select>
+            className="border p-2 w-full"
+          />
+          <input
+            type="number"
+            placeholder="Price"
+            value={newProduct.price}
+            onChange={(e) =>
+              setNewProduct((prev) => ({ ...prev, price: e.target.value }))
+            }
+            className="border p-2 w-full"
+          />
+          <select
+            value={newProduct.category}
+            onChange={(e) => {
+              if (e.target.value === "__custom") {
+                const newCat = prompt("Enter new category:");
+                if (newCat) {
+                  const updatedCategories = [
+                    ...new Set([...categories, newCat]),
+                  ];
+                  setCategories(updatedCategories);
+                  localStorage.setItem(
+                    "categories",
+                    JSON.stringify(updatedCategories)
+                  );
+                  setNewProduct((prev) => ({ ...prev, category: newCat }));
+                }
+              } else {
+                setNewProduct((prev) => ({
+                  ...prev,
+                  category: e.target.value,
+                }));
+              }
+            }}
+            className="border p-2 w-full"
+          >
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+            <option value="__custom">➕ Add New Category</option>
+          </select>
 
-        <button
-          onClick={handleAdd}
-          className="bg-green-400 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          Add Product
-        </button>
+          <button
+            onClick={handleAdd}
+            className="bg-green-400 text-white px-4 py-2 rounded hover:bg-blue-700 w-full"
+          >
+            Add Product
+          </button>
+        </div>
       </div>
     </div>
   );
