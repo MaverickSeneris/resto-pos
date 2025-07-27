@@ -1,10 +1,9 @@
-import { useEffect, useState, useRef } from "react";
-import { sampleMenu } from "../data/sampleMenu.js";
+import { useEffect, useState } from "react";
 import { tables } from "../data/tables.js";
+import Card from "../components/Card";
 
 const allMenuItems = JSON.parse(localStorage.getItem("menu") || "[]");
 const CATEGORIES = [...new Set(allMenuItems.map((item) => item.category))];
-
 
 export default function POS() {
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
@@ -19,7 +18,7 @@ export default function POS() {
     const saved = localStorage.getItem("selectedTable");
     return saved ? JSON.parse(saved) : null;
   });
-  const confirmBtnRef = useRef(null);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
   const [menu, setMenu] = useState(() => {
     return JSON.parse(localStorage.getItem("menu") || "[]");
@@ -39,7 +38,6 @@ export default function POS() {
     return () => window.removeEventListener("storage", syncMenu);
   }, []);
 
-
   const filteredMenu = menu.filter(
     (item) =>
       item.category === category &&
@@ -54,28 +52,12 @@ export default function POS() {
     localStorage.setItem("selectedTable", JSON.stringify(selectedTable));
   }, [selectedTable]);
 
-  useEffect(() => {
-    const handleEsc = (e) => {
-      if (e.key === "Escape") setIsSummaryOpen(false);
-    };
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
-  }, []);
-
   const handleOrder = (item) => {
     if (!selectedTable) return alert("Select a table first");
     setOrders((prev) => {
       const tableOrders = prev[selectedTable.id] || [];
       return { ...prev, [selectedTable.id]: [...tableOrders, item] };
     });
-  };
-
-  const deleteItem = (index) => {
-    const tableId = selectedTable.id;
-    const updated = [...(orders[tableId] || [])];
-    updated.splice(index, 1);
-    const newOrders = { ...orders, [tableId]: updated };
-    setOrders(newOrders);
   };
 
   const completeSale = () => {
@@ -105,92 +87,55 @@ export default function POS() {
 
     const updatedOrders = { ...orders, [selectedTable.id]: [] };
     setOrders(updatedOrders);
-    setCash(""); // reset cash input
-
+    setCash("");
+    setIsCheckoutOpen(false);
     alert("✅ Payment received and recorded in sales.");
   };
 
-  const removeOneItem = (itemId) => {
-    const tableId = selectedTable.id;
-    const tableOrders = orders[tableId] || [];
-    const index = tableOrders.findIndex((item) => item.id === itemId);
-    if (index === -1) return;
-
-    const updatedOrders = [...tableOrders];
-    updatedOrders.splice(index, 1);
-
-    setOrders((prev) => ({
-      ...prev,
-      [tableId]: updatedOrders,
-    }));
-  };
-
-  const removeAllItems = (itemId) => {
-    const tableId = selectedTable.id;
-    const tableOrders = orders[tableId] || [];
-
-    const updatedOrders = tableOrders.filter((item) => item.id !== itemId);
-
-    setOrders((prev) => ({
-      ...prev,
-      [tableId]: updatedOrders,
-    }));
-  };
-
-  const openSummaryModal = () => {
-    const total = (orders[selectedTable.id] || []).reduce(
-      (acc, item) => acc + item.price,
-      0
-    );
-    const paid = parseFloat(cash);
-    if (isNaN(paid) || paid < total) {
-      return alert("Please input the exact or excess amount.");
-    }
-    if ((orders[selectedTable.id] || []).length === 0) {
-      return alert("No items ordered yet.");
-    }
+  const printBill = () => {
+    if (!selectedTable || !orders[selectedTable.id]?.length) return;
     setIsSummaryOpen(true);
   };
 
-  return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">Select Table:</h2>
-      <div className="flex flex-wrap gap-2 mb-6">
-        {tables.map((table) => {
-          const isOccupied = (orders[table.id]?.length ?? 0) > 0;
-          return (
-            <button
-              key={table.id}
-              className={`px-4 py-2 rounded whitespace-nowrap border ${
-                selectedTable?.id === table.id
-                  ? "bg-blue-600 text-white"
-                  : "bg-white"
-              }`}
-              onClick={() => setSelectedTable(table)}
-            >
-              <div className="text-sm font-semibold">{table.name}</div>
-              <div
-                className={`text-xs ${
-                  isOccupied ? "text-red-600" : "text-green-600"
-                }`}
-              >
-                {isOccupied ? "Occupied" : "Vacant"}
-              </div>
-            </button>
-          );
-        })}
-      </div>
+  const totalAmount = (orders[selectedTable?.id] || []).reduce(
+    (acc, item) => acc + item.price,
+    0
+  );
 
+  const change = Math.max(0, (parseFloat(cash) || 0) - totalAmount);
+
+  const renderOrderItems = (items) => {
+    return Object.values(
+      (items || []).reduce((acc, item) => {
+        const key = item.id;
+        if (!acc[key]) acc[key] = { ...item, quantity: 1 };
+        else acc[key].quantity += 1;
+        return acc;
+      }, {})
+    ).map((item, i) => (
+      <li
+        key={i}
+        className="flex justify-between items-center border-b pb-1 text-sm"
+      >
+        <span className="truncate max-w-[60%]">
+          {item.name} x{item.quantity}
+        </span>
+        <span className="font-semibold">₱{item.price * item.quantity}</span>
+      </li>
+    ));
+  };
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      {/* Categories and search bar */}
       {selectedTable && (
-        <>
+        <div className="p-4">
           <div className="flex flex-wrap gap-2 mb-4">
             {CATEGORIES.map((cat) => (
               <button
                 key={cat}
-                className={`px-4 py-2 ${
-                  cat === category
-                    ? "bg-blue-600 text-white"
-                    : "bg-white border"
+                className={`px-4 py-2 rounded border ${
+                  cat === category ? "bg-blue-600 text-white" : "bg-white"
                 }`}
                 onClick={() => setCategory(cat)}
               >
@@ -198,16 +143,20 @@ export default function POS() {
               </button>
             ))}
           </div>
-
           <input
             type="text"
             placeholder="Search..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="border p-2 mb-4 w-full"
+            className="border p-2 w-full"
           />
+        </div>
+      )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="flex-1 flex flex-col md:flex-row gap-4 px-4 overflow-y-auto">
+        {/* Menu */}
+        <div className="md:w-2/3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredMenu.map((item) => (
               <div
                 key={item.id}
@@ -219,191 +168,151 @@ export default function POS() {
               </div>
             ))}
           </div>
+        </div>
 
-          <div className="mt-6">
-            <h2 className="font-bold mb-2">Orders for {selectedTable.name}:</h2>
-            <ul className="mb-2 space-y-1">
-              {Object.entries(
-                (orders[selectedTable.id] || []).reduce((acc, item) => {
-                  const key = item.id;
-                  if (!acc[key]) acc[key] = { ...item, quantity: 1 };
-                  else acc[key].quantity += 1;
-                  return acc;
-                }, {})
-              ).map(([id, item]) => (
-                <li
-                  key={id}
-                  className="flex justify-between items-center border-b pb-1"
-                >
-                  <span>
-                    {item.name} x{item.quantity} - ₱{item.price * item.quantity}
-                  </span>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => removeOneItem(parseInt(id))}
-                      className="text-yellow-600 hover:text-yellow-800 text-sm"
-                    >
-                      🗑 Remove One
-                    </button>
-                    <button
-                      onClick={() => removeAllItems(parseInt(id))}
-                      className="text-red-600 hover:text-red-800 text-sm"
-                    >
-                      ❌ Remove All
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-
-            <p className="font-bold">
-              Total: ₱
-              {(orders[selectedTable.id] || []).reduce(
-                (acc, item) => acc + item.price,
-                0
-              )}
-            </p>
-            <div className="mt-2 space-y-2">
-              <div>
-                <label className="block text-sm font-medium">
-                  Cash Payment:
-                </label>
+        {/* Order Summary */}
+        {selectedTable && (
+          <Card>
+            <div className="w-full max-w-md mx-auto">
+              <h2 className="font-bold mb-2">
+                Orders for {selectedTable?.name}:
+              </h2>
+              <ul className="mb-2 space-y-1 max-h-[300px] overflow-y-auto pr-2">
+                {renderOrderItems(orders[selectedTable.id])}
+              </ul>
+              <p className="font-bold">Total: ₱{totalAmount}</p>
+              <div className="mt-2">
+                <label className="text-sm block mb-1">Cash</label>
                 <input
                   type="number"
-                  className="border p-2 w-full mt-1"
                   value={cash}
                   onChange={(e) => setCash(e.target.value)}
-                  placeholder="Enter cash amount"
+                  className="border p-1 w-full text-sm"
                 />
               </div>
-              <p className="text-sm">
-                Change:{" "}
-                <span className="font-bold">
-                  ₱
-                  {Math.max(
-                    0,
-                    (parseFloat(cash) || 0) -
-                      (orders[selectedTable.id] || []).reduce(
-                        (acc, item) => acc + item.price,
-                        0
-                      )
-                  )}
-                </span>
+              <p className="text-sm mt-1">
+                Change: ₱<strong>{change}</strong>
               </p>
-            </div>
-            <button
-              // onClick={() => setIsSummaryOpen(true)}
-              onClick={openSummaryModal}
-              className={`mt-3 px-4 py-2 text-white rounded ${
-                parseFloat(cash) >=
-                (orders[selectedTable.id] || []).reduce(
-                  (acc, item) => acc + item.price,
-                  0
-                )
-                  ? "bg-green-600 hover:bg-green-700"
-                  : "bg-gray-400 cursor-not-allowed"
-              }`}
-              disabled={
-                parseFloat(cash) <
-                (orders[selectedTable.id] || []).reduce(
-                  (acc, item) => acc + item.price,
-                  0
-                )
-              }
-            >
-              Checkout
-            </button>
-          </div>
-        </>
-      )}
-
-      {isSummaryOpen && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 w-full max-w-md shadow-xl transition-all duration-300 animate-fadeIn">
-            <h2 className="text-2xl font-semibold mb-1 text-gray-800 dark:text-white">
-              Order Summary
-            </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-              <span className="font-semibold text-xl">
-                {selectedTable?.name}
-              </span>
-            </p>
-
-            <ul className="mb-4 space-y-2 text-sm text-gray-700 dark:text-gray-300">
-              {Object.entries(
-                (orders[selectedTable.id] || []).reduce((acc, item) => {
-                  const key = item.id;
-                  if (!acc[key]) acc[key] = { ...item, quantity: 1 };
-                  else acc[key].quantity += 1;
-                  return acc;
-                }, {})
-              ).map(([id, item]) => (
-                <li
-                  key={id}
-                  className="flex justify-between border-b pb-1 text-sm"
+              <div className="flex gap-2 mt-4">
+                <button
+                  onClick={() => setIsCheckoutOpen(true)}
+                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 w-full"
                 >
-                  <span>
-                    {item.name} x{item.quantity}
-                  </span>
-                  <span className="font-medium">
-                    ₱{item.price * item.quantity}
-                  </span>
-                </li>
-              ))}
-            </ul>
-
-            <div className="space-y-1 text-sm">
-              <p className="font-medium text-gray-700 dark:text-gray-200">
-                Cash: <span className="font-semibold">₱{cash}</span>
-              </p>
-              <p className="font-medium text-gray-700 dark:text-gray-200">
-                Total:{" "}
-                <span className="font-semibold">
-                  ₱
-                  {(orders[selectedTable.id] || []).reduce(
-                    (acc, item) => acc + item.price,
-                    0
-                  )}
-                </span>
-              </p>
-              <p className="font-medium text-green-700 dark:text-green-400">
-                Change:{" "}
-                <span className="font-semibold">
-                  ₱
-                  {Math.max(
-                    0,
-                    (parseFloat(cash) || 0) -
-                      (orders[selectedTable.id] || []).reduce(
-                        (acc, item) => acc + item.price,
-                        0
-                      )
-                  )}
-                </span>
-              </p>
+                  ✅ Checkout
+                </button>
+                <button
+                  onClick={printBill}
+                  className={`px-4 py-2 border rounded w-full ${
+                    !orders[selectedTable?.id]?.length
+                      ? "cursor-not-allowed opacity-50"
+                      : ""
+                  }`}
+                  disabled={!orders[selectedTable?.id]?.length}
+                >
+                  🖨 Print Bill
+                </button>
+              </div>
             </div>
+          </Card>
+        )}
+      </div>
 
-            <div className="flex justify-end gap-3 mt-6">
+      {/* Table selection */}
+      <div className="bg-white border-t p-4 sticky bottom-0 z-30 shadow-inner">
+        <h2 className="text-lg font-semibold mb-2">Select Table:</h2>
+        <div className="flex flex-wrap gap-2">
+          {tables.map((table) => {
+            const isOccupied = (orders[table.id]?.length ?? 0) > 0;
+            return (
               <button
-                onClick={() => setIsSummaryOpen(false)}
-                className="px-4 py-2 rounded-md border border-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm text-white bg-red-500"
+                key={table.id}
+                className={`px-4 py-2 rounded border transition-all duration-300 ${
+                  selectedTable?.id === table.id
+                    ? "bg-blue-600 text-white"
+                    : isOccupied
+                    ? "bg-red-500 text-white"
+                    : "bg-white"
+                }`}
+                onClick={() => setSelectedTable(table)}
               >
-                Cancel
+                <div className="text-sm font-semibold">{table.name}</div>
+                <div
+                  className={`text-xs ${
+                    isOccupied ? "text-white" : "text-green-600"
+                  }`}
+                >
+                  {isOccupied ? "Occupied" : "Vacant"}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Modal for printing */}
+      {isSummaryOpen && selectedTable && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white p-4 rounded shadow w-full max-w-sm animate-slideUp">
+            <h2 className="text-lg font-bold text-center mb-4">CHICKEN HAUS</h2>
+            <p className="mb-1">Table: {selectedTable?.name}</p>
+            <div className="border-b border-dashed mb-2"></div>
+            <ul className="space-y-1">
+              {renderOrderItems(orders[selectedTable.id])}
+            </ul>
+            <div className="border-t border-dashed my-2"></div>
+            <p className="font-bold">Total: ₱{totalAmount}</p>
+            <div className="flex justify-end gap-2 mt-4 no-print">
+              <button
+                onClick={() => window.print()}
+                className="px-4 py-1 bg-blue-600 text-white text-sm rounded"
+              >
+                🖨 Print
               </button>
               <button
-                onClick={() => {
-                  completeSale();
-                  setIsSummaryOpen(false);
-                }}
-                ref={confirmBtnRef}
-                className="px-4 py-2 rounded-md bg-green-600 hover:bg-green-700 text-white text-sm font-semibold"
+                onClick={() => setIsSummaryOpen(false)}
+                className="border px-4 py-1 text-sm rounded"
               >
-                Confirm Payment
+                Close
               </button>
             </div>
           </div>
         </div>
       )}
-  
+
+      {/* Modal for checkout confirmation */}
+      {isCheckoutOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md animate-slideUp">
+            <h2 className="text-lg font-bold mb-2">Confirm Checkout</h2>
+            <p>
+              Table: <strong>{selectedTable?.name}</strong>
+            </p>
+            <p>
+              Total: ₱<strong>{totalAmount}</strong>
+            </p>
+            <p>
+              Cash: ₱<strong>{cash}</strong>
+            </p>
+            <p>
+              Change: ₱<strong>{change}</strong>
+            </p>
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                onClick={() => setIsCheckoutOpen(false)}
+                className="px-4 py-2 border rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={completeSale}
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
