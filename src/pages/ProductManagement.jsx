@@ -1,27 +1,47 @@
 import { useState, useEffect } from "react";
+import { sampleMenu } from "../data/sampleMenu";
 
 export default function ProductManagement() {
-  const [menu, setMenu] = useState(() =>
-    JSON.parse(localStorage.getItem("menu") || "[]")
-  );
+  // const [menu, setMenu] = useState(() =>
+  //   JSON.parse(localStorage.getItem("menu") || "[]")
+  // );
+  const [menu, setMenu] = useState(() => {
+    const saved = localStorage.getItem("menu");
+    if (saved && JSON.parse(saved).length > 0) {
+      return JSON.parse(saved);
+    } else {
+      localStorage.setItem("menu", JSON.stringify(sampleMenu));
+      return sampleMenu;
+    }
+  });
+
+  // const [categories, setCategories] = useState(() => {
+  //   const saved = localStorage.getItem("categories");
+  //   return saved ? JSON.parse(saved) : ["Meals", "Drinks", "Ala Carte"];
+  // });
 
   const [categories, setCategories] = useState(() => {
     const saved = localStorage.getItem("categories");
-    return saved ? JSON.parse(saved) : ["Meals", "Drinks", "Ala Carte"];
+    if (saved) return JSON.parse(saved);
+
+    const uniqueCategories = [
+      ...new Set(sampleMenu.map((item) => item.category)),
+    ];
+    localStorage.setItem("categories", JSON.stringify(uniqueCategories));
+    return uniqueCategories;
   });
 
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [isDeletingCategory, setIsDeletingCategory] = useState(false);
 
- const [newProduct, setNewProduct] = useState(() => ({
-   name: "",
-   price: "",
-   category: localStorage.getItem("categories")
-     ? JSON.parse(localStorage.getItem("categories"))[0] || ""
-     : "Meals",
- }));
-
+  const [newProduct, setNewProduct] = useState(() => ({
+    name: "",
+    price: "",
+    category: localStorage.getItem("categories")
+      ? JSON.parse(localStorage.getItem("categories"))[0] || ""
+      : "Meals",
+  }));
 
   // Save menu and categories to localStorage
   useEffect(() => {
@@ -86,17 +106,52 @@ export default function ProductManagement() {
     alert(`✅ "${cat}" deleted.`);
   };
 
+  const handleResetToDefault = () => {
+    const confirmPwd = prompt("Enter admin password to restore default menu:");
+    if (confirmPwd !== "admin123") {
+      alert("❌ Wrong password. Reset canceled.");
+      return;
+    }
+
+    if (
+      !confirm(
+        "Are you sure you want to restore the default Chicken Haus menu? This will overwrite your current one."
+      )
+    )
+      return;
+
+    const uniqueCategories = [
+      ...new Set(sampleMenu.map((item) => item.category)),
+    ];
+
+    setMenu(sampleMenu);
+    setCategories(uniqueCategories);
+
+    localStorage.setItem("menu", JSON.stringify(sampleMenu));
+    localStorage.setItem("categories", JSON.stringify(uniqueCategories));
+
+    alert("🍗 Default Chicken Haus menu restored.");
+  };
+
   return (
     <div className="p-4">
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">Product List</h2>
-        <button
-          onClick={handleReset}
-          className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700"
-        >
-          🧹 Reset Menu
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleReset}
+            className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700"
+          >
+            Reset Menu
+          </button>
+          <button
+            onClick={handleResetToDefault}
+            className="bg-yellow-600 text-white px-3 py-1 rounded text-sm hover:bg-yellow-700"
+          >
+            Load Default Menu
+          </button>
+        </div>
       </div>
 
       {/* Search */}
