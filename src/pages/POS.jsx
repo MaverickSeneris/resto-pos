@@ -196,10 +196,10 @@ export default function POS() {
         </div>
       )}
 
-      <div className="flex-1 flex flex-col md:flex-row gap-4 px-4 overflow-y-auto">
+      <div className="flex-1 flex flex-col md:flex-row gap-4 px-4 max-h-[80vh] overflow-y-auto">
         {/* Menu */}
-        <div className="md:w-2/3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="md:w-2/3 max-h-[70vh] overflow-y-auto pr-2">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {filteredMenu.map((item) => (
               <div
                 key={item.id}
