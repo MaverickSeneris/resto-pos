@@ -409,7 +409,7 @@ export default function SalesHistory() {
           <div className="bg-white p-4 rounded shadow-lg w-full max-w-xs animate-slideUp transition-all print:animate-none print:shadow-none print:p-2 border border-gray-300 print:border-none print:w-[58mm] print:max-w-[58mm] print:mx-auto print:rounded-none print:shadow-none">
             {/* 🧾 Receipt style */}
             <div className="text-xs font-mono text-center bg-white print:bg-white p-4 rounded-md border border-dashed border-gray-400">
-              <h2 className="font-bold text-sm mb-1">CHICKEN HAUS</h2>
+              <h2 className="font-bold text-sm mb-1">THE COZY FORK</h2>
               <p className="mb-1">Rizal, Laguna</p>
               <p className="mb-2 border-b border-dashed pb-2">
                 {selectedSale.table} —{" "}

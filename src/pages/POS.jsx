@@ -324,7 +324,7 @@ export default function POS() {
       {isSummaryOpen && selectedTable && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fadeIn">
           <div className="bg-white p-4 rounded shadow w-full max-w-sm animate-slideUp">
-            <h2 className="text-lg font-bold text-center mb-4">CHICKEN HAUS</h2>
+            <h2 className="text-lg font-bold text-center mb-4">THE COZY FORK</h2>
             <p className="mb-1">Table: {selectedTable?.name}</p>
             <div className="border-b border-dashed mb-2"></div>
             <ul className="space-y-1">
