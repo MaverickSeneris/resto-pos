@@ -7,6 +7,8 @@ export default function SalesHistory() {
   const [deleteId, setDeleteId] = useState(null);
   const [password, setPassword] = useState("");
   const [selectedSale, setSelectedSale] = useState(null);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   // Load sales from localStorage on mount
   useEffect(() => {
@@ -29,9 +31,12 @@ export default function SalesHistory() {
   };
 
   // Filter sales by date
-  const filteredSales = filterDate
-    ? sales.filter((sale) => sale.date.startsWith(filterDate))
-    : sales;
+  const filteredSales = sales.filter((sale) => {
+    const saleDate = new Date(sale.date);
+    const afterStart = startDate ? saleDate >= new Date(startDate) : true;
+    const beforeEnd = endDate ? saleDate <= new Date(endDate + "T23:59") : true;
+    return afterStart && beforeEnd;
+  });
 
   // Handle delete sale
   const confirmDelete = () => {
@@ -49,14 +54,52 @@ export default function SalesHistory() {
   return (
     <div className="p-4">
       {/* 🔍 Date Filter */}
-      <input
+      <div className="flex gap-2 mb-4">
+        <input
+          type="date"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+          className="p-2 border rounded"
+        />
+        <input
+          type="date"
+          value={endDate}
+          onChange={(e) => setEndDate(e.target.value)}
+          className="p-2 border rounded"
+        />
+      </div>
+
+      {/* <input
         type="date"
         value={filterDate}
         onChange={(e) => setFilterDate(e.target.value)}
         className="mb-4 p-2 border rounded"
-      />
+      /> */}
 
       {/* 🧾 Sales List */}
+
+      {filteredSales.length > 0 && (
+        <div className="mb-4 text-lg font-semibold">
+          Total Sales{" "}
+          {startDate || endDate ? (
+            <>
+              from{" "}
+              {startDate ? format(new Date(startDate), "MMMM d") : "the start"}{" "}
+              to {endDate ? format(new Date(endDate), "MMMM d") : "today"}
+            </>
+          ) : (
+            "(All Time)"
+          )}
+          : ₱
+          {filteredSales.reduce((sum, sale) => sum + sale.total, 0).toFixed(2)}
+        </div>
+      )}
+      {filteredSales.length === 0 && (
+        <p className="text-gray-500 italic mb-4">
+          No sales found in this range.
+        </p>
+      )}
+
       {filteredSales.map((sale) => (
         <div key={sale.id} className="border p-4 mb-4 bg-white rounded shadow">
           <p className="font-bold">
