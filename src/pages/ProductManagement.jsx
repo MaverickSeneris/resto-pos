@@ -2,9 +2,6 @@ import { useState, useEffect } from "react";
 import { sampleMenu } from "../data/sampleMenu";
 
 export default function ProductManagement() {
-  // const [menu, setMenu] = useState(() =>
-  //   JSON.parse(localStorage.getItem("menu") || "[]")
-  // );
   const [menu, setMenu] = useState(() => {
     const saved = localStorage.getItem("menu");
     if (saved && JSON.parse(saved).length > 0) {
@@ -14,12 +11,6 @@ export default function ProductManagement() {
       return sampleMenu;
     }
   });
-
-  // const [categories, setCategories] = useState(() => {
-  //   const saved = localStorage.getItem("categories");
-  //   return saved ? JSON.parse(saved) : ["Meals", "Drinks", "Ala Carte"];
-  // });
-
   const [categories, setCategories] = useState(() => {
     const saved = localStorage.getItem("categories");
     if (saved) return JSON.parse(saved);
@@ -42,6 +33,8 @@ export default function ProductManagement() {
       ? JSON.parse(localStorage.getItem("categories"))[0] || ""
       : "Meals",
   }));
+  const [selectedMonth, setSelectedMonth] = useState(null);
+
 
   // Save menu and categories to localStorage
   useEffect(() => {

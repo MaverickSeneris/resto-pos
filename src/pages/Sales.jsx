@@ -16,6 +16,31 @@ export default function SalesHistory() {
     return saved ? JSON.parse(saved) : [];
   });
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedYear, setSelectedYear] = useState(() => {
+    return (
+      parseInt(localStorage.getItem("salesSelectedYear")) ||
+      new Date().getFullYear()
+    );
+  });
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const saved = localStorage.getItem("salesSelectedMonth");
+    return saved === null ? new Date().getMonth() : parseInt(saved);
+  });
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedQuickFilter, setSelectedQuickFilter] = useState("All");
+
+  const years = Array.from(
+    { length: 5 },
+    (_, i) => new Date().getFullYear() - 4 + i
+  );
+
+  useEffect(() => {
+    localStorage.setItem("salesSelectedYear", selectedYear);
+  }, [selectedYear]);
+
+  useEffect(() => {
+    localStorage.setItem("salesSelectedMonth", selectedMonth ?? "");
+  }, [selectedMonth]);
 
   // Load sales from localStorage on mount
   useEffect(() => {
@@ -83,18 +108,12 @@ export default function SalesHistory() {
     document.body.removeChild(link);
   };
 
-  // Filter sales by date
-  // const filteredSales = sales.filter((sale) => {
-  //   const saleDate = new Date(sale.date);
-  //   const afterStart = startDate
-  //     ? saleDate >= startOfDay(new Date(startDate))
-  //     : true;
-  //   const beforeEnd = endDate ? saleDate <= endOfDay(new Date(endDate)) : true;
-
-  //   return afterStart && beforeEnd;
-  // });
   const filteredSales = sales.filter((sale) => {
     const saleDate = new Date(sale.date);
+    const isYearMatch = saleDate.getFullYear() === selectedYear;
+    const isMonthMatch =
+      selectedMonth === null || saleDate.getMonth() === selectedMonth;
+
     const afterStart = startDate
       ? saleDate >= startOfDay(new Date(startDate))
       : true;
@@ -108,7 +127,9 @@ export default function SalesHistory() {
         })
       : true;
 
-    return afterStart && beforeEnd && categoryMatch;
+    return (
+      isYearMatch && isMonthMatch && afterStart && beforeEnd && categoryMatch
+    );
   });
 
   // Handle delete sale
@@ -126,96 +147,170 @@ export default function SalesHistory() {
 
   return (
     <div className="p-4">
-      {/* 🔍 Date Filter */}
-
       {/* 🔘 Quick Filter Buttons */}
-      <div className="flex gap-2 flex-wrap mb-4">
+      {/* 🔽 Filter Toggle */}
+      <div className="mb-2 flex justify-between items-center">
+        <h2 className="text-lg font-bold">Sales Filters</h2>
         <button
-          onClick={() => {
-            setStartDate("");
-            setEndDate("");
-          }}
-          className="px-3 py-1 text-sm rounded border hover:bg-gray-100"
+          onClick={() => setShowFilters(!showFilters)}
+          className="text-sm text-gray-700 hover:text-black flex items-center gap-1"
         >
-          All
-        </button>
-        <button
-          onClick={() => {
-            const today = new Date().toISOString().slice(0, 10);
-            setStartDate(today);
-            setEndDate(today);
-          }}
-          className="px-3 py-1 text-sm rounded border hover:bg-gray-100"
-        >
-          Today
-        </button>
-        <button
-          onClick={() => {
-            const y = new Date();
-            y.setDate(y.getDate() - 1);
-            const yesterday = y.toISOString().slice(0, 10);
-            setStartDate(yesterday);
-            setEndDate(yesterday);
-          }}
-          className="px-3 py-1 text-sm rounded border hover:bg-gray-100"
-        >
-          Yesterday
-        </button>
-        <button
-          onClick={() => {
-            const now = new Date();
-            const firstDay = new Date(
-              now.setDate(now.getDate() - now.getDay())
-            ); // Sunday
-            const lastDay = new Date();
-            setStartDate(firstDay.toISOString().slice(0, 10));
-            setEndDate(lastDay.toISOString().slice(0, 10));
-          }}
-          className="px-3 py-1 text-sm rounded border hover:bg-gray-100"
-        >
-          This Week
-        </button>
-      </div>
-      <div className="flex gap-2 flex-wrap mb-4">
-        <button
-          onClick={() => setSelectedCategory("")}
-          className={`px-3 py-1 text-sm rounded border ${
-            selectedCategory === "" ? "bg-gray-300" : "hover:bg-gray-100"
-          }`}
-        >
-          All Categories
-        </button>
-        {categories.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setSelectedCategory(cat)}
-            className={`px-3 py-1 text-sm rounded border ${
-              selectedCategory === cat ? "bg-gray-300" : "hover:bg-gray-100"
+          {showFilters ? "Hide" : "Show"} Filters
+          <span
+            className={`transition-transform ${
+              showFilters ? "rotate-180" : ""
             }`}
           >
-            {cat}
-          </button>
-        ))}
+            ▼
+          </span>
+        </button>
       </div>
 
-      {/* 📅 Manual Date Filter */}
-      <div className="flex gap-2 mb-4">
-        <input
-          type="date"
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-          className="p-2 border rounded"
-        />
-        <input
-          type="date"
-          value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
-          className="p-2 border rounded"
-        />
-      </div>
+      {/* 🧰 Filters Drawer */}
+      {showFilters && (
+        <div className="p-3 rounded border bg-white shadow mb-4 space-y-4 max-h-[50vh] overflow-y-auto text-sm">
+          {/* 🔘 Quick Filters */}
+          <div>
+            <p className="font-semibold text-gray-600 mb-1">Quick</p>
+            <hr className="mb-2" />
+            <div className="flex gap-1 flex-wrap">
+              {["All", "Today", "Yesterday", "This Week"].map((label) => {
+                const actionMap = {
+                  All: () => {
+                    setStartDate("");
+                    setEndDate("");
+                  },
+                  Today: () => {
+                    const today = new Date().toISOString().slice(0, 10);
+                    setStartDate(today);
+                    setEndDate(today);
+                  },
+                  Yesterday: () => {
+                    const y = new Date();
+                    y.setDate(y.getDate() - 1);
+                    const yesterday = y.toISOString().slice(0, 10);
+                    setStartDate(yesterday);
+                    setEndDate(yesterday);
+                  },
+                  "This Week": () => {
+                    const now = new Date();
+                    const firstDay = new Date(
+                      now.setDate(now.getDate() - now.getDay())
+                    );
+                    const lastDay = new Date();
+                    setStartDate(firstDay.toISOString().slice(0, 10));
+                    setEndDate(lastDay.toISOString().slice(0, 10));
+                  },
+                };
+                return (
+                  <button
+                    key={label}
+                    onClick={() => {
+                      actionMap[label]();
+                      setSelectedQuickFilter(label);
+                    }}
+                    className={`px-2 py-0.5 rounded border ${
+                      selectedQuickFilter === label
+                        ? "bg-blue-600 text-white"
+                        : "bg-white hover:bg-gray-100"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 📅 Year & Month */}
+          <div>
+            <p className="font-semibold text-gray-600 mb-1">Year & Month</p>
+            <hr className="mb-2" />
+            <div className="flex gap-1 flex-wrap items-center">
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                className="p-1 border rounded"
+              >
+                {years.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+              {Array.from({ length: 12 }, (_, i) => (
+                <button
+                  key={i}
+                  onClick={() =>
+                    setSelectedMonth(selectedMonth === i ? null : i)
+                  }
+                  className={`px-2 py-0.5 rounded border text-xs ${
+                    selectedMonth === i
+                      ? "bg-blue-600 text-white"
+                      : "bg-white hover:bg-gray-100"
+                  }`}
+                >
+                  {new Date(0, i).toLocaleString("default", { month: "short" })}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 🗓 Custom Date Picker */}
+          <div>
+            <p className="font-semibold text-gray-600 mb-1">Custom Range</p>
+            <hr className="mb-2" />
+            <div className="flex gap-1 flex-wrap">
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="p-1 border rounded text-xs"
+              />
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="p-1 border rounded text-xs"
+              />
+            </div>
+          </div>
+
+          {/* 🗂 Category Filter */}
+          <div>
+            <p className="font-semibold text-gray-600 mb-1">Categories</p>
+            <hr className="mb-2" />
+            <div className="flex gap-1 flex-wrap">
+              <button
+                onClick={() => setSelectedCategory("")}
+                className={`px-2 py-0.5 rounded border text-xs ${
+                  selectedCategory === ""
+                    ? "bg-blue-600 text-white"
+                    : "hover:bg-gray-100"
+                }`}
+              >
+                All
+              </button>
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-2 py-0.5 rounded border text-xs ${
+                    selectedCategory === cat
+                      ? "bg-blue-600 text-white"
+                      : "bg-white hover:bg-gray-100"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 🧾 Sales List */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 bg-white p-4 rounded shadow">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 bg-white p-4 border rounded shadow ">
         {/* 💰 Total Sales Info */}
         <div className="text-lg font-semibold text-gray-800">
           {filteredSales.length > 0 ? (
