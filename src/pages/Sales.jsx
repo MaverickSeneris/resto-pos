@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { startOfDay, endOfDay } from "date-fns";
+import { exportSalesToXlsx } from "../utils/exportToXlsx";
 
 export default function SalesHistory() {
   const [sales, setSales] = useState([]);
@@ -213,47 +214,59 @@ export default function SalesHistory() {
         />
       </div>
 
-      {/* <input
-        type="date"
-        value={filterDate}
-        onChange={(e) => setFilterDate(e.target.value)}
-        className="mb-4 p-2 border rounded"
-      /> */}
-
       {/* 🧾 Sales List */}
-      <div className="flex gap-2">
-        {filteredSales.length > 0 && (
-          <div className="mb-4 text-lg font-semibold">
-            Total Sales{" "}
-            {startDate || endDate ? (
-              <>
-                from{" "}
-                {startDate
-                  ? format(new Date(startDate), "MMMM d")
-                  : "the start"}{" "}
-                to {endDate ? format(new Date(endDate), "MMMM d") : "today"}
-              </>
-            ) : (
-              "(All Time)"
-            )}
-            : ₱
-            {filteredSales
-              .reduce((sum, sale) => sum + sale.total, 0)
-              .toFixed(2)}
-          </div>
-        )}
-        {filteredSales.length === 0 && (
-          <p className="text-gray-500 italic mb-4">
-            No sales found in this range.
-          </p>
-        )}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 bg-white p-4 rounded shadow">
+        {/* 💰 Total Sales Info */}
+        <div className="text-lg font-semibold text-gray-800">
+          {filteredSales.length > 0 ? (
+            <>
+              Total Sales{" "}
+              {startDate || endDate ? (
+                <>
+                  from{" "}
+                  <span className="text-blue-600">
+                    {startDate
+                      ? format(new Date(startDate), "MMMM d")
+                      : "the start"}
+                  </span>{" "}
+                  to{" "}
+                  <span className="text-blue-600">
+                    {endDate ? format(new Date(endDate), "MMMM d") : "today"}
+                  </span>
+                </>
+              ) : (
+                <span className="text-blue-600">(All Time)</span>
+              )}
+              :{" "}
+              <span className="text-green-600">
+                ₱
+                {filteredSales
+                  .reduce((sum, sale) => sum + sale.total, 0)
+                  .toFixed(2)}
+              </span>
+            </>
+          ) : (
+            <span className="text-gray-500 italic">
+              No sales found in this range.
+            </span>
+          )}
+        </div>
 
-        <button
-          onClick={exportCSV}
-          className="px-3 py-1 text-sm rounded bg-green-600 text-white hover:bg-green-700 mb-4"
-        >
-          Export CSV
-        </button>
+        {/* 📤 Export Buttons */}
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={exportCSV}
+            className="px-4 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700"
+          >
+            📄 Export CSV
+          </button>
+          <button
+            onClick={() => exportSalesToXlsx(filteredSales)}
+            className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            📊 Export XLSX
+          </button>
+        </div>
       </div>
 
       {filteredSales.map((sale) => (
