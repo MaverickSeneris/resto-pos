@@ -199,15 +199,17 @@ export default function POS() {
       <div className="flex-1 flex flex-col md:flex-row gap-4 px-4 max-h-[80vh] overflow-y-auto">
         {/* Menu */}
         <div className="md:w-2/3 max-h-[70vh] overflow-y-auto pr-2">
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
             {filteredMenu.map((item) => (
               <div
                 key={item.id}
-                className="p-4 border rounded bg-white shadow cursor-pointer"
+                className="p-3 sm:p-4 border rounded bg-white shadow cursor-pointer hover:bg-gray-100 transition"
                 onClick={() => handleOrder(item)}
               >
-                <h4 className="font-bold">{item.name}</h4>
-                <p>₱{item.price}</p>
+                <h4 className="font-bold text-sm sm:text-base">{item.name}</h4>
+                <p className="font-semibold text-xs sm:text-sm text-gray-700">
+                  ₱{item.price}
+                </p>
               </div>
             ))}
           </div>
@@ -215,56 +217,58 @@ export default function POS() {
 
         {/* Order Summary */}
         {selectedTable && (
-          <Card>
-            <div className="w-full max-w-md mx-auto">
-              <h2 className="font-bold mb-2">
-                Orders for {selectedTable?.name}:
-              </h2>
-              <ul className="mb-2 space-y-1 max-h-[300px] overflow-y-auto pr-2">
-                {renderOrderItems(orders[selectedTable.id])}
-              </ul>
-              <p className="font-bold">Total: ₱{totalAmount}</p>
-              <div className="mt-2">
-                <label className="text-sm block mb-1">Cash</label>
-                <input
-                  type="number"
-                  value={cash}
-                  onChange={(e) => setCash(e.target.value)}
-                  className="border p-1 w-full text-sm"
-                />
-              </div>
-              <p className="text-sm mt-1">
-                Change: ₱<strong>{change}</strong>
-              </p>
-              <div className="flex gap-2 mt-4">
-                <button
-                  disabled={
-                    !selectedTable || !(orders[selectedTable?.id]?.length > 0)
-                  }
-                  onClick={() => setIsCheckoutOpen(true)}
-                  className={`px-4 py-2 text-white rounded w-full transition-colors duration-200 ${
-                    !selectedTable || !(orders[selectedTable?.id]?.length > 0)
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-green-600 hover:bg-green-700"
-                  }`}
-                >
-                  Checkout
-                </button>
+          <div className=" md:sticky md:top-4 md:self-start w-full md:w-[300px]">
+            <Card>
+              <div className="w-full mx-auto">
+                <h2 className="font-bold mb-2">
+                  Orders for {selectedTable?.name}:
+                </h2>
+                <ul className="mb-2 space-y-1 max-h-[300px] overflow-y-auto pr-2">
+                  {renderOrderItems(orders[selectedTable.id])}
+                </ul>
+                <p className="font-bold">Total: ₱{totalAmount}</p>
+                <div className="mt-2">
+                  <label className="text-sm block mb-1">Cash</label>
+                  <input
+                    type="number"
+                    value={cash}
+                    onChange={(e) => setCash(e.target.value)}
+                    className="border p-1 w-full text-sm"
+                  />
+                </div>
+                <p className="text-sm mt-1">
+                  Change: ₱<strong>{change}</strong>
+                </p>
+                <div className="flex gap-2 mt-4">
+                  <button
+                    disabled={
+                      !selectedTable || !(orders[selectedTable?.id]?.length > 0)
+                    }
+                    onClick={() => setIsCheckoutOpen(true)}
+                    className={`px-4 py-2 text-white rounded w-full transition-colors duration-200 ${
+                      !selectedTable || !(orders[selectedTable?.id]?.length > 0)
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-green-600 hover:bg-green-700"
+                    }`}
+                  >
+                    Checkout
+                  </button>
 
-                <button
-                  onClick={printBill}
-                  className={`px-4 py-2 border rounded w-full ${
-                    !orders[selectedTable?.id]?.length
-                      ? "cursor-not-allowed opacity-50"
-                      : ""
-                  }`}
-                  disabled={!orders[selectedTable?.id]?.length}
-                >
-                  🖨 Print Bill
-                </button>
+                  <button
+                    onClick={printBill}
+                    className={`px-4 py-2 border rounded w-full ${
+                      !orders[selectedTable?.id]?.length
+                        ? "cursor-not-allowed opacity-50"
+                        : ""
+                    }`}
+                    disabled={!orders[selectedTable?.id]?.length}
+                  >
+                    🖨 Print Bill
+                  </button>
+                </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+          </div>
         )}
       </div>
 
