@@ -20,7 +20,7 @@ function App() {
   const navigate = useNavigate();
 
   const handleAccessProducts = () => {
-    if (adminPassword === "admin123") {
+    if (adminPassword === import.meta.env.VITE_ADMIN_PASSWORD) {
       setIsPasswordModalOpen(false);
       setAdminPassword("");
       setPasswordError("");

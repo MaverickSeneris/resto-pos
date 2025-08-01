@@ -75,7 +75,7 @@ export default function ProductManagement() {
 
   const handleReset = () => {
     const confirmPwd = prompt("Enter admin password to reset:");
-    if (confirmPwd !== "admin123") {
+    if (confirmPwd !== import.meta.env.VITE_ADMIN_PASSWORD) {
       alert("❌ Wrong password. Reset canceled.");
       return;
     }
@@ -101,7 +101,7 @@ export default function ProductManagement() {
 
   const handleResetToDefault = () => {
     const confirmPwd = prompt("Enter admin password to restore default menu:");
-    if (confirmPwd !== "admin123") {
+    if (confirmPwd !== import.meta.env.VITE_ADMIN_PASSWORD) {
       alert("❌ Wrong password. Reset canceled.");
       return;
     }
@@ -169,7 +169,7 @@ export default function ProductManagement() {
                   const pwd = prompt(
                     "Enter admin password to delete category:"
                   );
-                  if (pwd === "admin123") {
+                  if (pwd === import.meta.env.VITE_ADMIN_PASSWORD) {
                     setIsDeletingCategory(true);
                   } else {
                     alert("❌ Wrong password.");
@@ -238,7 +238,7 @@ export default function ProductManagement() {
               <button
                 onClick={() => {
                   const pwd = prompt("Enter admin password to delete:");
-                  if (pwd !== "admin123") {
+                  if (pwd !== import.meta.env.VITE_ADMIN_PASSWORD) {
                     alert("❌ Wrong password.");
                     return;
                   }
