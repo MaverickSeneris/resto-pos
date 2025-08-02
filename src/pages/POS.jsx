@@ -151,7 +151,6 @@ export default function POS() {
           {item.name} x{item.quantity}
         </span>
         <span className="font-semibold">₱{item.price * item.quantity}</span>
-    
       </li>
     ));
   };
@@ -219,20 +218,6 @@ export default function POS() {
                 <ul className="mb-2 space-y-1 max-h-[300px] overflow-y-auto pr-2">
                   {renderOrderItems(orders[selectedTable.id])}
                 </ul>
-                <button
-                  onClick={() => {
-                    const confirmReset = confirm("Reset order for this table?");
-                    if (confirmReset) {
-                      const updatedOrders = { ...orders };
-                      delete updatedOrders[selectedTable.id];
-                      setOrders(updatedOrders);
-                      setCash("");
-                    }
-                  }}
-                  className="font-bold bg-red-400 hover:bg-red-700 text-white text-sm px-4 py-2 rounded w-full mb-2"
-                >
-                  Reset Order
-                </button>
 
                 <p className="font-bold">Total: ₱{totalAmount}</p>
                 <div className="mt-2">
@@ -253,7 +238,7 @@ export default function POS() {
                       !selectedTable || !(orders[selectedTable?.id]?.length > 0)
                     }
                     onClick={() => setIsCheckoutOpen(true)}
-                    className={`px-4 py-2 text-white rounded w-full transition-colors duration-200 ${
+                    className={`px-4 pt-2 md:pt-1 pb-2 text-white rounded w-full transition-colors duration-200 ${
                       !selectedTable || !(orders[selectedTable?.id]?.length > 0)
                         ? "bg-gray-400 cursor-not-allowed"
                         : "bg-green-600 hover:bg-green-700"
@@ -264,7 +249,7 @@ export default function POS() {
 
                   <button
                     onClick={printBill}
-                    className={`px-4 py-2 border rounded w-full ${
+                    className={`px-4 pt-2 md:pt-1 pb-2 border rounded w-full ${
                       !orders[selectedTable?.id]?.length
                         ? "cursor-not-allowed opacity-50"
                         : ""
@@ -275,6 +260,22 @@ export default function POS() {
                   </button>
                 </div>
               </div>
+              {orders[selectedTable?.id]?.length > 0 && (
+                <button
+                  onClick={() => {
+                    const confirmReset = confirm("Reset order for this table?");
+                    if (confirmReset) {
+                      const updatedOrders = { ...orders };
+                      delete updatedOrders[selectedTable.id];
+                      setOrders(updatedOrders);
+                      setCash("");
+                    }
+                  }}
+                  className="mt-1 font-bold bg-red-400 hover:bg-red-700 text-white text-sm px-4 py-2 rounded w-full mb-2"
+                >
+                  Reset Order
+                </button>
+              )}
             </Card>
           </div>
         )}
