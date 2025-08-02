@@ -247,12 +247,12 @@ export default function POS() {
                     Orders for {selectedTable?.name}:
                   </h2>
                   <div className="flex justify-end mb-2 print:hidden">
-                  <button
-                    onClick={() => setIsEditingOrder((prev) => !prev)}
-                    className="text-xs font-semibold px-2 hover:bg-yellow-500 text-green-700 rounded"
-                  >
-                    {isEditingOrder ? "Done" : "Edit"}
-                  </button>
+                    <button
+                      onClick={() => setIsEditingOrder((prev) => !prev)}
+                      className="text-xs font-semibold px-2 hover:bg-yellow-500 text-green-700 rounded"
+                    >
+                      {isEditingOrder ? "Done" : "Edit"}
+                    </button>
                   </div>
                 </div>
 
@@ -276,11 +276,17 @@ export default function POS() {
                 <div className="flex gap-2 mt-4">
                   <button
                     disabled={
-                      !selectedTable || !(orders[selectedTable?.id]?.length > 0)
+                      !selectedTable ||
+                      !(orders[selectedTable?.id]?.length > 0) ||
+                      !cash ||
+                      parseFloat(cash) < totalAmount
                     }
                     onClick={() => setIsCheckoutOpen(true)}
                     className={`px-4 pt-2 md:pt-1 pb-2 text-white rounded w-full transition-colors duration-200 ${
-                      !selectedTable || !(orders[selectedTable?.id]?.length > 0)
+                      !selectedTable ||
+                      !(orders[selectedTable?.id]?.length > 0) ||
+                      !cash ||
+                      parseFloat(cash) < totalAmount
                         ? "bg-gray-400 cursor-not-allowed"
                         : "bg-green-600 hover:bg-green-700"
                     }`}
