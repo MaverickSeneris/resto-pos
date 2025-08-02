@@ -24,6 +24,7 @@ export default function POS() {
   const [menu, setMenu] = useState(() => {
     return JSON.parse(localStorage.getItem("menu") || "[]");
   });
+  const [isEditingOrder, setIsEditingOrder] = useState(false);
 
   useEffect(() => {
     const storedMenu = JSON.parse(localStorage.getItem("menu") || "[]");
@@ -76,15 +77,15 @@ export default function POS() {
     }));
   };
 
-  const removeAllItems = (itemId) => {
-    const tableId = selectedTable.id;
-    const tableOrders = orders[tableId] || [];
-    const updatedOrders = tableOrders.filter((item) => item.id !== itemId);
-    setOrders((prev) => ({
-      ...prev,
-      [tableId]: updatedOrders,
-    }));
-  };
+  // const removeAllItems = (itemId) => {
+  //   const tableId = selectedTable.id;
+  //   const tableOrders = orders[tableId] || [];
+  //   const updatedOrders = tableOrders.filter((item) => item.id !== itemId);
+  //   setOrders((prev) => ({
+  //     ...prev,
+  //     [tableId]: updatedOrders,
+  //   }));
+  // };
 
   const completeSale = () => {
     if (!selectedTable) return;
@@ -135,6 +136,24 @@ export default function POS() {
   const change = Math.max(0, (parseFloat(cash) || 0) - totalAmount);
 
   const renderOrderItems = (items) => {
+    // return Object.values(
+    //   (items || []).reduce((acc, item) => {
+    //     const key = item.id;
+    //     if (!acc[key]) acc[key] = { ...item, quantity: 1 };
+    //     else acc[key].quantity += 1;
+    //     return acc;
+    //   }, {})
+    // ).map((item, i) => (
+    //   <li
+    //     key={i}
+    //     className="flex justify-between items-center border-b pb-1 text-sm"
+    //   >
+    //     <span className="truncate max-w-[60%]">
+    //       {item.name} x{item.quantity}
+    //     </span>
+    //     <span className="font-semibold">₱{item.price * item.quantity}</span>
+    //   </li>
+    // ));
     return Object.values(
       (items || []).reduce((acc, item) => {
         const key = item.id;
@@ -147,10 +166,21 @@ export default function POS() {
         key={i}
         className="flex justify-between items-center border-b pb-1 text-sm"
       >
-        <span className="truncate max-w-[60%]">
-          {item.name} x{item.quantity}
+        <div className="flex items-center gap-2 max-w-[70%]">
+          {isEditingOrder && (
+            <button
+              onClick={() => removeOneItem(item.id, selectedTable.id)}
+              className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+            >
+              −
+            </button>
+          )}
+          <span className="truncate">{item.name}</span>
+          <span className="text-gray-500">x{item.quantity}</span>
+        </div>
+        <span className="font-semibold whitespace-nowrap">
+          ₱{item.price * item.quantity}
         </span>
-        <span className="font-semibold">₱{item.price * item.quantity}</span>
       </li>
     ));
   };
@@ -212,9 +242,20 @@ export default function POS() {
             </div>
             <Card>
               <div className="w-full mx-auto">
-                <h2 className="font-bold mb-2">
-                  Orders for {selectedTable?.name}:
-                </h2>
+                <div className="flex justify-between items-center">
+                  <h2 className="font-bold mb-2">
+                    Orders for {selectedTable?.name}:
+                  </h2>
+                  <div className="flex justify-end mb-2 print:hidden">
+                  <button
+                    onClick={() => setIsEditingOrder((prev) => !prev)}
+                    className="text-xs font-semibold px-2 hover:bg-yellow-500 text-green-700 rounded"
+                  >
+                    {isEditingOrder ? "Done" : "Edit"}
+                  </button>
+                  </div>
+                </div>
+
                 <ul className="mb-2 space-y-1 max-h-[300px] overflow-y-auto pr-2">
                   {renderOrderItems(orders[selectedTable.id])}
                 </ul>
