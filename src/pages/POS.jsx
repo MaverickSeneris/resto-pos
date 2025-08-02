@@ -151,20 +151,7 @@ export default function POS() {
           {item.name} x{item.quantity}
         </span>
         <span className="font-semibold">₱{item.price * item.quantity}</span>
-        <div className="flex gap-2 ml-2">
-          <button
-            onClick={() => removeOneItem(item.id)}
-            className="text-yellow-600 text-xs"
-          >
-            🗑 One
-          </button>
-          <button
-            onClick={() => removeAllItems(item.id)}
-            className="text-red-600 text-xs"
-          >
-            ❌ All
-          </button>
-        </div>
+    
       </li>
     ));
   };
@@ -203,7 +190,9 @@ export default function POS() {
             {filteredMenu.map((item) => (
               <div
                 key={item.id}
-                className="p-3 sm:p-4 border rounded bg-white shadow cursor-pointer hover:bg-gray-100 transition"
+                className="p-3 sm:p-4 border rounded bg-white shadow cursor-pointer 
+  hover:bg-green-50 active:bg-green-100 active:scale-95 
+  transition-all duration-100 ease-in-out"
                 onClick={() => handleOrder(item)}
               >
                 <h4 className="font-bold text-sm sm:text-base">{item.name}</h4>
@@ -217,7 +206,11 @@ export default function POS() {
 
         {/* Order Summary */}
         {selectedTable && (
-          <div className=" md:sticky md:top-4 md:self-start w-full md:w-[300px]">
+          <div className="flex flex-col gap-2 md:sticky md:top-4 md:self-start w-full md:w-[300px]">
+            <div className="hidden md:flex bg-green-500 justify-between px-2 rounded py-2 lg:mx-4.5 border">
+              <span className="text-white font-semibold">Total:</span>
+              <p className="font-bold text-white text-3xl"> ₱{totalAmount}</p>
+            </div>
             <Card>
               <div className="w-full mx-auto">
                 <h2 className="font-bold mb-2">
@@ -226,6 +219,21 @@ export default function POS() {
                 <ul className="mb-2 space-y-1 max-h-[300px] overflow-y-auto pr-2">
                   {renderOrderItems(orders[selectedTable.id])}
                 </ul>
+                <button
+                  onClick={() => {
+                    const confirmReset = confirm("Reset order for this table?");
+                    if (confirmReset) {
+                      const updatedOrders = { ...orders };
+                      delete updatedOrders[selectedTable.id];
+                      setOrders(updatedOrders);
+                      setCash("");
+                    }
+                  }}
+                  className="font-bold bg-red-400 hover:bg-red-700 text-white text-sm px-4 py-2 rounded w-full mb-2"
+                >
+                  Reset Order
+                </button>
+
                 <p className="font-bold">Total: ₱{totalAmount}</p>
                 <div className="mt-2">
                   <label className="text-sm block mb-1">Cash</label>
@@ -324,7 +332,9 @@ export default function POS() {
       {isSummaryOpen && selectedTable && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fadeIn">
           <div className="bg-white p-4 rounded shadow w-full max-w-sm animate-slideUp">
-            <h2 className="text-lg font-bold text-center mb-4">THE COZY FORK</h2>
+            <h2 className="text-lg font-bold text-center mb-4">
+              THE COZY FORK
+            </h2>
             <p className="mb-1">Table: {selectedTable?.name}</p>
             <div className="border-b border-dashed mb-2"></div>
             <ul className="space-y-1">

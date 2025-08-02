@@ -4,6 +4,7 @@ import {
   Route,
   Link,
   useNavigate,
+  useLocation,
 } from "react-router-dom";
 import { useState } from "react";
 
@@ -16,6 +17,7 @@ function App() {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [adminPassword, setAdminPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const location = useLocation();
 
   const navigate = useNavigate();
 
@@ -34,15 +36,35 @@ function App() {
     <div className="min-h-screen bg-gray-100">
       <nav className="bg-gray-800 text-white p-4 flex justify-between sticky top-0 z-50 shadow-md">
         <div className="space-x-4">
-          <Link to="/" className="hover:underline">
+          <Link
+            to="/"
+            className={`hover:underline ${
+              location.pathname === "/"
+                ? "text-yellow-400 font-bold"
+                : ""
+            }`}
+          >
             POS
           </Link>
-          <Link to="/sales" className="hover:underline">
+
+          <Link
+            to="/sales"
+            className={`hover:underline ${
+              location.pathname === "/sales"
+                ? "text-yellow-400 font-bold"
+                : ""
+            }`}
+          >
             Sales History
           </Link>
+
           <button
             onClick={() => setIsPasswordModalOpen(true)}
-            className="hover:underline"
+            className={`hover:underline ${
+              location.pathname === "/products"
+                ? "text-yellow-400 font-bold"
+                : ""
+            }`}
           >
             Product Management
           </button>
