@@ -366,9 +366,13 @@ export default function SalesHistory() {
 
       {filteredSales.map((sale) => (
         <div key={sale.id} className="border p-4 mb-4 bg-white rounded shadow">
+          {/* <p className="font-bold">
+            {sale.table} — {format(new Date(sale.date), "yyyy-MM-dd HH:mm")}
+          </p> */}
           <p className="font-bold">
             {sale.table} — {format(new Date(sale.date), "yyyy-MM-dd HH:mm")}
           </p>
+          <p className="text-xs text-gray-600 mb-2">Receipt ID: {sale.id}</p>
           <ul className="text-sm mb-2">
             {groupItems(sale.items).map((item, i) => (
               <li key={i}>
@@ -411,6 +415,7 @@ export default function SalesHistory() {
             <div className="text-xs font-mono text-center bg-white print:bg-white p-4 rounded-md border border-dashed border-gray-400">
               <h2 className="font-bold text-sm mb-1">THE COZY FORK</h2>
               <p className="mb-1">Rizal, Laguna</p>
+              <p className="mb-1">Receipt ID: {selectedSale.id}</p>
               <p className="mb-2 border-b border-dashed pb-2">
                 {selectedSale.table} —{" "}
                 {format(new Date(selectedSale.date), "yyyy-MM-dd HH:mm")}

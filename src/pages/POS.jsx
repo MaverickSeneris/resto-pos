@@ -103,7 +103,7 @@ export default function POS() {
     }
 
     const receipt = {
-      id: Date.now(),
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       items: tableOrders,
       table: selectedTable.name,
       date: new Date().toISOString(),
@@ -136,24 +136,7 @@ export default function POS() {
   const change = Math.max(0, (parseFloat(cash) || 0) - totalAmount);
 
   const renderOrderItems = (items) => {
-    // return Object.values(
-    //   (items || []).reduce((acc, item) => {
-    //     const key = item.id;
-    //     if (!acc[key]) acc[key] = { ...item, quantity: 1 };
-    //     else acc[key].quantity += 1;
-    //     return acc;
-    //   }, {})
-    // ).map((item, i) => (
-    //   <li
-    //     key={i}
-    //     className="flex justify-between items-center border-b pb-1 text-sm"
-    //   >
-    //     <span className="truncate max-w-[60%]">
-    //       {item.name} x{item.quantity}
-    //     </span>
-    //     <span className="font-semibold">₱{item.price * item.quantity}</span>
-    //   </li>
-    // ));
+  
     return Object.values(
       (items || []).reduce((acc, item) => {
         const key = item.id;
@@ -170,12 +153,13 @@ export default function POS() {
           {isEditingOrder && (
             <button
               onClick={() => removeOneItem(item.id, selectedTable.id)}
-              className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+              className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 print:hidden"
             >
               −
             </button>
           )}
-          <span className="truncate">{item.name}</span>
+          {/* <span className="truncate">{item.name}</span> */}
+          <span className="max-w-[90%] break-words text-[0.95rem]">{item.name}</span>
           <span className="text-gray-500">x{item.quantity}</span>
         </div>
         <span className="font-semibold whitespace-nowrap">
@@ -235,12 +219,12 @@ export default function POS() {
 
         {/* Order Summary */}
         {selectedTable && (
-          <div className="flex flex-col gap-2 md:sticky md:top-4 md:self-start w-full md:w-[300px]">
-            <div className="hidden md:flex bg-green-500 justify-between px-2 rounded py-2 lg:mx-4.5 border">
+          <div className="flex flex-col gap-2 md:sticky md:top-4 md:self-start w-full md:w-[350px] border rounded p-2">
+            <div className="hidden md:flex bg-green-500 justify-between px-2 rounded py-2  border">
               <span className="text-white font-semibold">Total:</span>
               <p className="font-bold text-white text-3xl"> ₱{totalAmount}</p>
             </div>
-            <Card>
+          
               <div className="w-full mx-auto">
                 <div className="flex justify-between items-center">
                   <h2 className="font-bold mb-2">
@@ -260,7 +244,9 @@ export default function POS() {
                   {renderOrderItems(orders[selectedTable.id])}
                 </ul>
 
-                <p className="font-bold">Total: ₱{totalAmount}</p>
+                <p className=" flex justify-between font-bold pr-2">
+                  <div>Total: </div> <div>₱{totalAmount}</div>
+                </p>
                 <div className="mt-2">
                   <label className="text-sm block mb-1">Cash</label>
                   <input
@@ -274,37 +260,41 @@ export default function POS() {
                   Change: ₱<strong>{change}</strong>
                 </p>
                 <div className="flex gap-2 mt-4">
-                  <button
-                    disabled={
-                      !selectedTable ||
-                      !(orders[selectedTable?.id]?.length > 0) ||
-                      !cash ||
-                      parseFloat(cash) < totalAmount
-                    }
-                    onClick={() => setIsCheckoutOpen(true)}
-                    className={`px-4 pt-2 md:pt-1 pb-2 text-white rounded w-full transition-colors duration-200 ${
-                      !selectedTable ||
-                      !(orders[selectedTable?.id]?.length > 0) ||
-                      !cash ||
-                      parseFloat(cash) < totalAmount
-                        ? "bg-gray-400 cursor-not-allowed"
-                        : "bg-green-600 hover:bg-green-700"
-                    }`}
-                  >
-                    Checkout
-                  </button>
+                  {!isEditingOrder && (
+                    <button
+                      disabled={
+                        !selectedTable ||
+                        !(orders[selectedTable?.id]?.length > 0) ||
+                        !cash ||
+                        parseFloat(cash) < totalAmount
+                      }
+                      onClick={() => setIsCheckoutOpen(true)}
+                      className={`px-4 pt-2 md:pt-1 pb-2 text-white rounded w-full transition-colors duration-200 ${
+                        !selectedTable ||
+                        !(orders[selectedTable?.id]?.length > 0) ||
+                        !cash ||
+                        parseFloat(cash) < totalAmount
+                          ? "bg-gray-400 cursor-not-allowed"
+                          : "bg-green-600 hover:bg-green-700"
+                      }`}
+                    >
+                      Checkout
+                    </button>
+                  )}
 
-                  <button
-                    onClick={printBill}
-                    className={`px-4 pt-2 md:pt-1 pb-2 border rounded w-full ${
-                      !orders[selectedTable?.id]?.length
-                        ? "cursor-not-allowed opacity-50"
-                        : ""
-                    }`}
-                    disabled={!orders[selectedTable?.id]?.length}
-                  >
-                    🖨 Print Bill
-                  </button>
+                  {!isEditingOrder && (
+                    <button
+                      onClick={printBill}
+                      className={`px-4 pt-2 md:pt-1 pb-2 border rounded w-full ${
+                        !orders[selectedTable?.id]?.length
+                          ? "cursor-not-allowed opacity-50"
+                          : ""
+                      }`}
+                      disabled={!orders[selectedTable?.id]?.length}
+                    >
+                      🖨 Print Bill
+                    </button>
+                  )}
                 </div>
               </div>
               {orders[selectedTable?.id]?.length > 0 && (
@@ -323,7 +313,7 @@ export default function POS() {
                   Reset Order
                 </button>
               )}
-            </Card>
+          
           </div>
         )}
       </div>
@@ -379,27 +369,29 @@ export default function POS() {
       {/* Modal for printing */}
       {isSummaryOpen && selectedTable && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white p-4 rounded shadow w-full max-w-sm animate-slideUp">
+          <div className="bg-white p-4 rounded shadow w-full max-w-sm animate-slideUp print:w-[58mm]">
             <h2 className="text-lg font-bold text-center mb-4">
               THE COZY FORK
             </h2>
-            <p className="mb-1">Table: {selectedTable?.name}</p>
+            <p className="mb-1 font-bold">{selectedTable?.name}</p>
             <div className="border-b border-dashed mb-2"></div>
             <ul className="space-y-1">
               {renderOrderItems(orders[selectedTable.id])}
             </ul>
             <div className="border-t border-dashed my-2"></div>
-            <p className="font-bold">Total: ₱{totalAmount}</p>
+            <p className=" flex justify-between font-bold">
+              <div>Total: </div> <div>₱{totalAmount}</div>
+            </p>
             <div className="flex justify-end gap-2 mt-4 no-print">
               <button
                 onClick={() => window.print()}
-                className="px-4 py-1 bg-blue-600 text-white text-sm rounded"
+                className="px-4 py-1 bg-blue-600 text-white text-sm rounded print:hidden"
               >
                 🖨 Print
               </button>
               <button
                 onClick={() => setIsSummaryOpen(false)}
-                className="border px-4 py-1 text-sm rounded"
+                className="border px-4 py-1 text-sm rounded print:hidden"
               >
                 Close
               </button>
