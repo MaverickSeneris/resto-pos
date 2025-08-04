@@ -7,6 +7,9 @@ import {
   useLocation,
 } from "react-router-dom";
 import { useState } from "react";
+import { Toaster } from "react-hot-toast";
+
+
 
 // Pages
 import POS from "./pages/POS";
@@ -39,9 +42,7 @@ function App() {
           <Link
             to="/"
             className={`hover:underline ${
-              location.pathname === "/"
-                ? "text-yellow-400 font-bold"
-                : ""
+              location.pathname === "/" ? "text-yellow-400 font-bold" : ""
             }`}
           >
             POS
@@ -50,9 +51,7 @@ function App() {
           <Link
             to="/sales"
             className={`hover:underline ${
-              location.pathname === "/sales"
-                ? "text-yellow-400 font-bold"
-                : ""
+              location.pathname === "/sales" ? "text-yellow-400 font-bold" : ""
             }`}
           >
             Sales History
@@ -70,7 +69,7 @@ function App() {
           </button>
         </div>
       </nav>
-
+      <Toaster position="top-center" reverseOrder={false} />
       <Routes>
         <Route path="/" element={<POS />} />
         <Route path="/sales" element={<SalesHistory />} />

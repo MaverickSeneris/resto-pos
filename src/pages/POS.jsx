@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { tables } from "../data/tables.js";
-import Card from "../components/Card";
+import { toast } from "react-hot-toast";
 
 const allMenuItems = JSON.parse(localStorage.getItem("menu") || "[]");
 const CATEGORIES = [...new Set(allMenuItems.map((item) => item.category))];
@@ -55,7 +55,15 @@ export default function POS() {
   }, [selectedTable]);
 
   const handleOrder = (item) => {
-    if (!selectedTable) return alert("Select a table first");
+    if (!selectedTable)
+      return toast.error("Select a table first.", {
+        duration: 4000,
+        style: {
+          background: "#fee2e2",
+          color: "#991b1b",
+          border: "1px solid #fca5a5",
+        },
+      });
     setOrders((prev) => {
       const tableOrders = prev[selectedTable.id] || [];
       return { ...prev, [selectedTable.id]: [...tableOrders, item] };
@@ -92,14 +100,28 @@ export default function POS() {
 
     const tableOrders = orders[selectedTable.id] || [];
     if (tableOrders.length === 0) {
-      return alert("No orders to checkout.");
+      return toast.error("No orders to checkout.", {
+        duration: 4000,
+        style: {
+          background: "#fee2e2",
+          color: "#991b1b",
+          border: "1px solid #fca5a5",
+        },
+      });
     }
 
     const total = tableOrders.reduce((acc, item) => acc + item.price, 0);
     const paidAmount = parseFloat(cash);
 
     if (isNaN(paidAmount) || paidAmount < total) {
-      return alert("Insufficient cash payment.");
+      return toast.error("Insufficient cash payment.", {
+        duration: 4000,
+        style: {
+          background: "#fee2e2",
+          color: "#991b1b",
+          border: "1px solid #fca5a5",
+        },
+      });
     }
 
     const receipt = {
@@ -120,7 +142,15 @@ export default function POS() {
     setOrders(updatedOrders);
     setCash("");
     setIsCheckoutOpen(false);
-    alert("✅ Payment received and recorded in sales.");
+    // toast.success("✅ Payment received and recorded in sales.");
+    toast.success("Payment received and recorded in sales.", {
+      duration: 3000,
+      style: {
+        background: "#d1fae5",
+        color: "#065f46",
+        border: "1px solid #34d399",
+      },
+    });
   };
 
   const printBill = () => {
@@ -136,7 +166,6 @@ export default function POS() {
   const change = Math.max(0, (parseFloat(cash) || 0) - totalAmount);
 
   const renderOrderItems = (items) => {
-  
     return Object.values(
       (items || []).reduce((acc, item) => {
         const key = item.id;
@@ -159,7 +188,9 @@ export default function POS() {
             </button>
           )}
           {/* <span className="truncate">{item.name}</span> */}
-          <span className="max-w-[90%] break-words text-[0.95rem]">{item.name}</span>
+          <span className="max-w-[90%] break-words text-[0.95rem]">
+            {item.name}
+          </span>
           <span className="text-gray-500">x{item.quantity}</span>
         </div>
         <span className="font-semibold whitespace-nowrap">
@@ -224,96 +255,95 @@ export default function POS() {
               <span className="text-white font-semibold">Total:</span>
               <p className="font-bold text-white text-3xl"> ₱{totalAmount}</p>
             </div>
-          
-              <div className="w-full mx-auto">
-                <div className="flex justify-between items-center">
-                  <h2 className="font-bold mb-2">
-                    Orders for {selectedTable?.name}:
-                  </h2>
-                  <div className="flex justify-end mb-2 print:hidden">
-                    <button
-                      onClick={() => setIsEditingOrder((prev) => !prev)}
-                      className="text-xs font-semibold px-2 hover:bg-yellow-500 text-green-700 rounded"
-                    >
-                      {isEditingOrder ? "Done" : "Edit"}
-                    </button>
-                  </div>
-                </div>
 
-                <ul className="mb-2 space-y-1 max-h-[300px] overflow-y-auto pr-2">
-                  {renderOrderItems(orders[selectedTable.id])}
-                </ul>
-
-                <p className=" flex justify-between font-bold pr-2">
-                  <div>Total: </div> <div>₱{totalAmount}</div>
-                </p>
-                <div className="mt-2">
-                  <label className="text-sm block mb-1">Cash</label>
-                  <input
-                    type="number"
-                    value={cash}
-                    onChange={(e) => setCash(e.target.value)}
-                    className="border p-1 w-full text-sm"
-                  />
-                </div>
-                <p className="text-sm mt-1">
-                  Change: ₱<strong>{change}</strong>
-                </p>
-                <div className="flex gap-2 mt-4">
-                  {!isEditingOrder && (
-                    <button
-                      disabled={
-                        !selectedTable ||
-                        !(orders[selectedTable?.id]?.length > 0) ||
-                        !cash ||
-                        parseFloat(cash) < totalAmount
-                      }
-                      onClick={() => setIsCheckoutOpen(true)}
-                      className={`px-4 pt-2 md:pt-1 pb-2 text-white rounded w-full transition-colors duration-200 ${
-                        !selectedTable ||
-                        !(orders[selectedTable?.id]?.length > 0) ||
-                        !cash ||
-                        parseFloat(cash) < totalAmount
-                          ? "bg-gray-400 cursor-not-allowed"
-                          : "bg-green-600 hover:bg-green-700"
-                      }`}
-                    >
-                      Checkout
-                    </button>
-                  )}
-
-                  {!isEditingOrder && (
-                    <button
-                      onClick={printBill}
-                      className={`px-4 pt-2 md:pt-1 pb-2 border rounded w-full ${
-                        !orders[selectedTable?.id]?.length
-                          ? "cursor-not-allowed opacity-50"
-                          : ""
-                      }`}
-                      disabled={!orders[selectedTable?.id]?.length}
-                    >
-                      🖨 Print Bill
-                    </button>
-                  )}
+            <div className="w-full mx-auto">
+              <div className="flex justify-between items-center">
+                <h2 className="font-bold mb-2">
+                  Orders for {selectedTable?.name}:
+                </h2>
+                <div className="flex justify-end mb-2 print:hidden">
+                  <button
+                    onClick={() => setIsEditingOrder((prev) => !prev)}
+                    className="text-xs font-semibold px-2 hover:bg-yellow-500 text-green-700 rounded"
+                  >
+                    {isEditingOrder ? "Done" : "Edit"}
+                  </button>
                 </div>
               </div>
-              {orders[selectedTable?.id]?.length > 0 && (
-                <button
-                  onClick={() => {
-                    const confirmReset = confirm("Reset order for this table?");
-                    if (confirmReset) {
-                      const updatedOrders = { ...orders };
-                      delete updatedOrders[selectedTable.id];
-                      setOrders(updatedOrders);
-                      setCash("");
+
+              <ul className="mb-2 space-y-1 max-h-[300px] overflow-y-auto pr-2">
+                {renderOrderItems(orders[selectedTable.id])}
+              </ul>
+
+              <p className=" flex justify-between font-bold pr-2">
+                <div>Total: </div> <div>₱{totalAmount}</div>
+              </p>
+              <div className="mt-2">
+                <label className="text-sm block mb-1">Cash</label>
+                <input
+                  type="number"
+                  value={cash}
+                  onChange={(e) => setCash(e.target.value)}
+                  className="border p-1 w-full text-sm"
+                />
+              </div>
+              <p className="text-sm mt-1">
+                Change: ₱<strong>{change}</strong>
+              </p>
+              <div className="flex gap-2 mt-4">
+                {!isEditingOrder && (
+                  <button
+                    disabled={
+                      !selectedTable ||
+                      !(orders[selectedTable?.id]?.length > 0) ||
+                      !cash ||
+                      parseFloat(cash) < totalAmount
                     }
-                  }}
-                  className="mt-1 font-bold bg-red-400 hover:bg-red-700 text-white text-sm px-4 py-2 rounded w-full mb-2"
-                >
-                  Reset Order
-                </button>
-              )}
-          
+                    onClick={() => setIsCheckoutOpen(true)}
+                    className={`px-4 pt-2 md:pt-1 pb-2 text-white rounded w-full transition-colors duration-200 ${
+                      !selectedTable ||
+                      !(orders[selectedTable?.id]?.length > 0) ||
+                      !cash ||
+                      parseFloat(cash) < totalAmount
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-green-600 hover:bg-green-700"
+                    }`}
+                  >
+                    Checkout
+                  </button>
+                )}
+
+                {!isEditingOrder && (
+                  <button
+                    onClick={printBill}
+                    className={`px-4 pt-2 md:pt-1 pb-2 border rounded w-full ${
+                      !orders[selectedTable?.id]?.length
+                        ? "cursor-not-allowed opacity-50"
+                        : ""
+                    }`}
+                    disabled={!orders[selectedTable?.id]?.length}
+                  >
+                    🖨 Print Bill
+                  </button>
+                )}
+              </div>
+            </div>
+            {orders[selectedTable?.id]?.length > 0 && (
+              <button
+                onClick={() => {
+                  const confirmReset = confirm("Reset order for this table?");
+                  if (confirmReset) {
+                    const updatedOrders = { ...orders };
+                    delete updatedOrders[selectedTable.id];
+                    setOrders(updatedOrders);
+                    setCash("");
+                  }
+                }}
+                className="mt-1 font-bold bg-red-400 hover:bg-red-700 text-white text-sm px-4 py-2 rounded w-full mb-2"
+              >
+                Reset Order
+              </button>
+            )}
           </div>
         )}
       </div>

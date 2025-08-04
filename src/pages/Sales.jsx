@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { startOfDay, endOfDay } from "date-fns";
 import { exportSalesToXlsx } from "../utils/exportToXlsx";
+import { toast } from "react-hot-toast";
 
 export default function SalesHistory() {
   const [selectedBackupFile, setSelectedBackupFile] = useState(null);
@@ -94,6 +95,18 @@ export default function SalesHistory() {
       });
     });
 
+    if (rows.length === 0) {
+      toast.error("Nothing to export. Try adjusting the date filter.", {
+        duration: 4000,
+        style: {
+          background: "#fee2e2",
+          color: "#991b1b",
+          border: "1px solid #fca5a5",
+        },
+      });
+      return;
+    }
+
     const csvContent = [
       headers.join(","),
       ...rows.map((r) => r.join(",")),
@@ -108,6 +121,41 @@ export default function SalesHistory() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+
+    toast.success("📄 CSV downloaded!", {
+      duration: 3000,
+      style: {
+        background: "#d1fae5",
+        color: "#065f46",
+        border: "1px solid #34d399",
+      },
+    });
+  };
+  // Export filtered results to XLSX
+
+  const handleExportXLSX = () => {
+    if (filteredSales.length === 0) {
+      toast.error("No sales to export. Try adjusting the filters.", {
+        duration: 4000,
+        style: {
+          background: "#fee2e2",
+          color: "#991b1b",
+          border: "1px solid #fca5a5",
+        },
+      });
+      return;
+    }
+
+    exportSalesToXlsx(filteredSales);
+
+    toast.success("XLSX exported successfully!", {
+      duration: 3000,
+      style: {
+        background: "#d1fae5",
+        color: "#065f46",
+        border: "1px solid #34d399",
+      },
+    });
   };
 
   const filteredSales = sales.filter((sale) => {
@@ -211,25 +259,52 @@ export default function SalesHistory() {
     a.download = filename;
     a.click();
 
-    toast.success("\u2705 Backup downloaded!");
+    toast.success("Backup downloaded!", {
+      duration: 3000,
+      style: {
+        background: "#d1fae5",
+        color: "#065f46",
+        border: "1px solid #34d399",
+      },
+    });
   };
-
 
   function handleRestoreLocalStorage(e) {
     const file = e.target.files[0];
-    if (!file) return;
+    if (!file) {
+      toast.warn("No file selected.", {
+        duration: 3000,
+        style: {
+          background: "#fef3c7", // amber-100
+          color: "#92400e", // amber-700
+          border: "1px solid #fbbf24", // amber-400
+        },
+      });
+      return;
+    }
+
+    const enteredPassword = prompt("Enter restore password:");
+    if (enteredPassword !== import.meta.env.VITE_ADMIN_PASSWORD) {
+      toast.error("Incorrect password. Restore denied.", {
+        duration: 4000,
+        style: {
+          background: "#fee2e2", // red-100
+          color: "#991b1b", // red-700
+          border: "1px solid #fca5a5", // red-400
+        },
+      });
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = function (event) {
       try {
         const backupData = JSON.parse(event.target.result);
 
-        // Validate structure
         if (typeof backupData !== "object" || backupData === null) {
           throw new Error("Invalid backup format");
         }
 
-        // Check for key collisions
         const overlappingKeys = Object.keys(backupData).filter(
           (key) => localStorage.getItem(key) !== null
         );
@@ -237,34 +312,59 @@ export default function SalesHistory() {
         if (
           overlappingKeys.length > 0 &&
           !confirm(
-            `⚠️ ${overlappingKeys.length} existing key(s) will be overwritten.\nContinue restoring?`
+            `${overlappingKeys.length} existing key(s) will be overwritten.\nContinue restoring?`
           )
         ) {
-          alert("❌ Restore cancelled.");
+          toast("Restore cancelled.", {
+            duration: 3000,
+            style: {
+              background: "#f3f4f6", // gray-100
+              color: "#374151", // gray-700
+              border: "1px solid #d1d5db", // gray-300
+            },
+          });
           return;
         }
 
-        // Restore data
         for (const [key, value] of Object.entries(backupData)) {
           localStorage.setItem(key, value);
         }
 
-        alert("✅ localStorage restored!");
-        location.reload(); // Optional
+        toast.success("Backup data restored! Reloading...", {
+          duration: 3000,
+          style: {
+            background: "#d1fae5", // green-100
+            color: "#065f46", // green-700
+            border: "1px solid #34d399", // green-400
+          },
+        });
+        setTimeout(() => location.reload(), 800);
       } catch (err) {
-        alert("❌ Invalid file or corrupted JSON.");
+        toast.error("Invalid file or corrupted JSON.", {
+          duration: 4000,
+          style: {
+            background: "#fee2e2", // red-100
+            color: "#991b1b", // red-700
+            border: "1px solid #fca5a5", // red-400
+          },
+        });
       }
     };
+
     reader.readAsText(file);
   }
 
-
-
-
   // Handle delete sale
   const confirmDelete = () => {
-    if (password !== "admin123") {
-      alert("❌ Wrong password.");
+    if (password !== import.meta.env.VITE_ADMIN_PASSWORD) {
+      toast.error("Wrong password.", {
+        duration: 4000,
+        style: {
+          background: "#fee2e2",
+          color: "#991b1b",
+          border: "1px solid #fca5a5",
+        },
+      });
       return;
     }
     const updated = sales.filter((sale) => sale.id !== deleteId);
@@ -272,6 +372,14 @@ export default function SalesHistory() {
     setSales(updated);
     setDeleteId(null);
     setPassword("");
+    toast.success("Receipt deleted", {
+      duration: 3000,
+      style: {
+        background: "#d1fae5",
+        color: "#065f46",
+        border: "1px solid #34d399",
+      },
+    });
   };
 
   return (
@@ -485,8 +593,14 @@ export default function SalesHistory() {
             >
               📄 Export CSV
             </button>
-            <button
+            {/* <button
               onClick={() => exportSalesToXlsx(filteredSales)}
+              className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              📊 Export XLSX
+            </button> */}
+            <button
+              onClick={() => handleExportXLSX()}
               className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
             >
               📊 Export XLSX

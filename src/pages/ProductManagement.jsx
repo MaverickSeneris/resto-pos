@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { sampleMenu } from "../data/sampleMenu";
+import { toast } from "react-hot-toast";
 
 export default function ProductManagement() {
   const [menu, setMenu] = useState(() => {
@@ -35,7 +36,6 @@ export default function ProductManagement() {
   }));
   const [selectedMonth, setSelectedMonth] = useState(null);
 
-
   // Save menu and categories to localStorage
   useEffect(() => {
     localStorage.setItem("menu", JSON.stringify(menu));
@@ -51,7 +51,14 @@ export default function ProductManagement() {
     if (!name.trim() || !price) return;
 
     if (menu.some((p) => p.name.toLowerCase() === name.toLowerCase())) {
-      alert("⚠️ Product already exists.");
+      toast.error("Product already exists.", {
+        duration: 4000,
+        style: {
+          background: "#fee2e2",
+          color: "#991b1b",
+          border: "1px solid #fca5a5",
+        },
+      });
       return;
     }
 
@@ -76,14 +83,28 @@ export default function ProductManagement() {
   const handleReset = () => {
     const confirmPwd = prompt("Enter admin password to reset:");
     if (confirmPwd !== import.meta.env.VITE_ADMIN_PASSWORD) {
-      alert("❌ Wrong password. Reset canceled.");
+      toast.error("Wrong password. Reset canceled.", {
+        duration: 4000,
+        style: {
+          background: "#fee2e2",
+          color: "#991b1b",
+          border: "1px solid #fca5a5",
+        },
+      });
       return;
     }
 
     if (!confirm("Are you sure you want to reset the entire menu?")) return;
 
     setMenu([]);
-    alert("✅ Menu has been reset.");
+    toast.success("Menu has been reset.", {
+      duration: 3000,
+      style: {
+        background: "#d1fae5",
+        color: "#065f46",
+        border: "1px solid #34d399",
+      },
+    });
   };
 
   const handleDeleteCategory = (cat) => {
@@ -96,13 +117,27 @@ export default function ProductManagement() {
     setCategories(updatedCategories);
     setSelectedCategory("All");
 
-    alert(`✅ "${cat}" deleted.`);
+    toast.success(`"${cat}" deleted.`, {
+      duration: 3000,
+      style: {
+        background: "#d1fae5",
+        color: "#065f46",
+        border: "1px solid #34d399",
+      },
+    });
   };
 
   const handleResetToDefault = () => {
     const confirmPwd = prompt("Enter admin password to restore default menu:");
     if (confirmPwd !== import.meta.env.VITE_ADMIN_PASSWORD) {
-      alert("❌ Wrong password. Reset canceled.");
+      toast.error("Wrong password. Reset canceled.", {
+        duration: 4000,
+        style: {
+          background: "#fee2e2",
+          color: "#991b1b",
+          border: "1px solid #fca5a5",
+        },
+      });
       return;
     }
 
@@ -123,7 +158,14 @@ export default function ProductManagement() {
     localStorage.setItem("menu", JSON.stringify(sampleMenu));
     localStorage.setItem("categories", JSON.stringify(uniqueCategories));
 
-    alert("🍗 Default Chicken Haus menu restored.");
+    toast.success("🍗 Default Chicken Haus menu restored.", {
+      duration: 3000,
+      style: {
+        background: "#d1fae5",
+        color: "#065f46",
+        border: "1px solid #34d399",
+      },
+    });
   };
 
   return (
@@ -172,7 +214,14 @@ export default function ProductManagement() {
                   if (pwd === import.meta.env.VITE_ADMIN_PASSWORD) {
                     setIsDeletingCategory(true);
                   } else {
-                    alert("❌ Wrong password.");
+                    toast.error("Wrong password.", {
+                      duration: 4000,
+                      style: {
+                        background: "#fee2e2",
+                        color: "#991b1b",
+                        border: "1px solid #fca5a5",
+                      },
+                    });
                   }
                 }}
                 className="text-xs text-green-600 hover:underline"
@@ -239,7 +288,14 @@ export default function ProductManagement() {
                 onClick={() => {
                   const pwd = prompt("Enter admin password to delete:");
                   if (pwd !== import.meta.env.VITE_ADMIN_PASSWORD) {
-                    alert("❌ Wrong password.");
+                    toast.error("Wrong password.", {
+                      duration: 4000,
+                      style: {
+                        background: "#fee2e2",
+                        color: "#991b1b",
+                        border: "1px solid #fca5a5",
+                      },
+                    });
                     return;
                   }
                   if (

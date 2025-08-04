@@ -1,3 +1,4 @@
+// src/data/table.js
 export const tables = [
   ...Array.from({ length: 20 }, (_, i) => ({
     id: i + 1,
