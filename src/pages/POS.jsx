@@ -1,5 +1,6 @@
+// import { defaultTables } from "../data/defaultTables.js";
+import { tables as defaultTables } from "../data/tables.js";
 import { useEffect, useState } from "react";
-import { tables } from "../data/tables.js";
 import { toast } from "react-hot-toast";
 
 const allMenuItems = JSON.parse(localStorage.getItem("menu") || "[]");
@@ -20,11 +21,19 @@ export default function POS() {
     return saved ? JSON.parse(saved) : null;
   });
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-
   const [menu, setMenu] = useState(() => {
     return JSON.parse(localStorage.getItem("menu") || "[]");
   });
   const [isEditingOrder, setIsEditingOrder] = useState(false);
+
+  const [tables, setTables] = useState(() => {
+    const stored = localStorage.getItem("tables");
+    return stored ? JSON.parse(stored) : defaultTables;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("tables", JSON.stringify(tables));
+  }, [tables]);
 
   useEffect(() => {
     const storedMenu = JSON.parse(localStorage.getItem("menu") || "[]");
@@ -85,16 +94,6 @@ export default function POS() {
     }));
   };
 
-  // const removeAllItems = (itemId) => {
-  //   const tableId = selectedTable.id;
-  //   const tableOrders = orders[tableId] || [];
-  //   const updatedOrders = tableOrders.filter((item) => item.id !== itemId);
-  //   setOrders((prev) => ({
-  //     ...prev,
-  //     [tableId]: updatedOrders,
-  //   }));
-  // };
-
   const completeSale = () => {
     if (!selectedTable) return;
 
@@ -142,7 +141,6 @@ export default function POS() {
     setOrders(updatedOrders);
     setCash("");
     setIsCheckoutOpen(false);
-    // toast.success("✅ Payment received and recorded in sales.");
     toast.success("Payment received and recorded in sales.", {
       duration: 3000,
       style: {
@@ -182,12 +180,11 @@ export default function POS() {
           {isEditingOrder && (
             <button
               onClick={() => removeOneItem(item.id, selectedTable.id)}
-              className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 print:hidden"
+              className="text-xs font-extrabold bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 print:hidden"
             >
               −
             </button>
           )}
-          {/* <span className="truncate">{item.name}</span> */}
           <span className="max-w-[90%] break-words text-[0.95rem]">
             {item.name}
           </span>
@@ -199,6 +196,97 @@ export default function POS() {
       </li>
     ));
   };
+  const addNewTable = () => {
+    const nextId = tables.length ? Math.max(...tables.map((t) => t.id)) + 1 : 1;
+    const newTable = { id: nextId, name: `Table ${nextId}` };
+    setTables([...tables, newTable]);
+    toast.success("New table added.", {
+      duration: 3000,
+      style: {
+        background: "#d1fae5",
+        color: "#065f46",
+        border: "1px solid #34d399",
+      },
+    });
+  };
+
+  const deleteTable = (tableId) => {
+    const isOccupied = (orders[tableId]?.length ?? 0) > 0;
+    const tableName =
+      tables.find((t) => t.id === tableId)?.name || `Table ${tableId}`;
+
+    if (isOccupied) {
+      toast.error("Cannot delete an occupied table.", {
+        duration: 3000,
+        style: {
+          background: "#fee2e2",
+          color: "#991b1b",
+          border: "1px solid #fca5a5",
+        },
+      });
+      return;
+    }
+
+    const confirmDelete = confirm(
+      `Are you sure you want to delete ${tableName}?`
+    );
+    if (!confirmDelete) return;
+
+    const updated = tables.filter((t) => t.id !== tableId);
+    setTables(updated);
+    if (selectedTable?.id === tableId) setSelectedTable(null);
+
+    toast.success(`${tableName} deleted.`, {
+      duration: 3000,
+      style: {
+        background: "#d1fae5",
+        color: "#065f46",
+        border: "1px solid #34d399",
+      },
+    });
+  };
+
+
+  const resetTablesToDefault = () => {
+    const extraTables = tables.filter((t) => t.id > 20);
+    const hasOrders = extraTables.some((t) => orders[t.id]?.length > 0);
+
+    if (hasOrders) {
+      toast.error("Cannot reset. Some extra tables have existing orders.", {
+        duration: 3000,
+        style: {
+          background: "#fee2e2",
+          color: "#991b1b",
+          border: "1px solid #fca5a5",
+        },
+      });
+      return;
+    }
+    const input = prompt("Enter admin password to reset tables:");
+    if (input !== import.meta.env.VITE_ADMIN_PASSWORD) {
+      toast.error("Incorrect password.", {
+        duration: 3000,
+        style: {
+          background: "#fee2e2",
+          color: "#991b1b",
+          border: "1px solid #fca5a5",
+        },
+      });
+      return;
+    }
+
+    setTables(defaultTables);
+    setSelectedTable(null);
+    toast.success("Tables reset to default.", {
+      duration: 3000,
+      style: {
+        background: "#d1fae5",
+        color: "#065f46",
+        border: "1px solid #34d399",
+      },
+    });
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* Categories and search bar */}
@@ -251,26 +339,25 @@ export default function POS() {
         {/* Order Summary */}
         {selectedTable && (
           <div className="flex flex-col gap-2 md:sticky md:top-4 md:self-start w-full md:w-[350px] border rounded p-2">
+            <div className="flex justify-between items-center">
+              <h2 className="font-bold mb-2">
+                Orders for {selectedTable?.name}:
+              </h2>
+              <div className="flex justify-end mb-2 print:hidden">
+                <button
+                  onClick={() => setIsEditingOrder((prev) => !prev)}
+                  className="text-xs font-semibold px-2 hover:bg-yellow-500 text-green-700 rounded"
+                >
+                  {isEditingOrder ? "Done" : "Edit"}
+                </button>
+              </div>
+            </div>
             <div className="hidden md:flex bg-green-500 justify-between px-2 rounded py-2  border">
               <span className="text-white font-semibold">Total:</span>
               <p className="font-bold text-white text-3xl"> ₱{totalAmount}</p>
             </div>
 
             <div className="w-full mx-auto">
-              <div className="flex justify-between items-center">
-                <h2 className="font-bold mb-2">
-                  Orders for {selectedTable?.name}:
-                </h2>
-                <div className="flex justify-end mb-2 print:hidden">
-                  <button
-                    onClick={() => setIsEditingOrder((prev) => !prev)}
-                    className="text-xs font-semibold px-2 hover:bg-yellow-500 text-green-700 rounded"
-                  >
-                    {isEditingOrder ? "Done" : "Edit"}
-                  </button>
-                </div>
-              </div>
-
               <ul className="mb-2 space-y-1 max-h-[300px] overflow-y-auto pr-2">
                 {renderOrderItems(orders[selectedTable.id])}
               </ul>
@@ -355,12 +442,31 @@ export default function POS() {
           <h2 className="text-lg font-semibold">
             You're on {selectedTable?.name || "None"}
           </h2>
-          <button
-            onClick={() => setShowTableDrawer((prev) => !prev)}
-            className="text-sm px-3 py-1 border rounded bg-blue-600 text-white"
-          >
-            {showTableDrawer ? "Hide Tables" : "Show Tables"}
-          </button>
+          <div className="flex gap-2">
+            {showTableDrawer && (
+              <button
+                onClick={addNewTable}
+                className="text-xs px-3 py-1 border rounded bg-green-600 text-white"
+              >
+                + Add
+              </button>
+            )}
+
+            {showTableDrawer && (
+              <button
+                onClick={resetTablesToDefault}
+                className="text-xs px-3 py-1 border rounded bg-red-600 text-white"
+              >
+                Reset
+              </button>
+            )}
+            <button
+              onClick={() => setShowTableDrawer((prev) => !prev)}
+              className="text-xs px-3 py-1 border rounded bg-blue-600 text-white"
+            >
+              {showTableDrawer ? "Hide" : "Show"}
+            </button>
+          </div>
         </div>
 
         {showTableDrawer && (
@@ -369,26 +475,37 @@ export default function POS() {
               {tables.map((table) => {
                 const isOccupied = (orders[table.id]?.length ?? 0) > 0;
                 return (
-                  <button
-                    key={table.id}
-                    className={`text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded border transition-all duration-300 ${
-                      selectedTable?.id === table.id
-                        ? "bg-blue-600 text-white"
-                        : isOccupied
-                        ? "bg-red-500 text-white"
-                        : "bg-white"
-                    }`}
-                    onClick={() => setSelectedTable(table)}
-                  >
-                    <div className="font-semibold">{table.name}</div>
-                    <div
-                      className={`text-xs ${
-                        isOccupied ? "text-white" : "text-green-600"
+                  <div key={table.id} className="relative">
+                    <button
+                      className={`text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded border transition-all duration-300 w-full ${
+                        selectedTable?.id === table.id
+                          ? "bg-blue-600 text-white"
+                          : isOccupied
+                          ? "bg-red-500 text-white"
+                          : "bg-white"
                       }`}
+                      onClick={() => setSelectedTable(table)}
                     >
-                      {isOccupied ? "Occupied" : "Vacant"}
-                    </div>
-                  </button>
+                      <div className="font-semibold">{table.name}</div>
+                      <div
+                        className={`text-xs ${
+                          isOccupied ? "text-white" : "text-green-600"
+                        }`}
+                      >
+                        {isOccupied ? "Occupied" : "Vacant"}
+                      </div>
+                    </button>
+
+                    {table.id > 20 && !isOccupied && (
+                      <button
+                        onClick={() => deleteTable(table.id)}
+                        className="absolute -top-1 -right-1 text-white hover:text-red-800 bg-red-600 rounded-full text-xs px-1 border-red-600"
+                        title="Delete Table"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
                 );
               })}
             </div>
