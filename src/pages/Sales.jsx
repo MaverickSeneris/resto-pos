@@ -4,6 +4,8 @@ import { startOfDay, endOfDay } from "date-fns";
 import { exportSalesToXlsx } from "../utils/exportToXlsx";
 
 export default function SalesHistory() {
+  const [selectedBackupFile, setSelectedBackupFile] = useState(null);
+
   const [sales, setSales] = useState([]);
   const [filterDate, setFilterDate] = useState("");
   const [deleteId, setDeleteId] = useState(null);
@@ -131,6 +133,133 @@ export default function SalesHistory() {
       isYearMatch && isMonthMatch && afterStart && beforeEnd && categoryMatch
     );
   });
+
+  // function handleBackupLocalStorage() {
+  //   const data = { ...localStorage };
+  //   const blob = new Blob([JSON.stringify(data, null, 2)], {
+  //     type: "application/json",
+  //   });
+  //   const url = URL.createObjectURL(blob);
+  //   const link = document.createElement("a");
+  //   link.href = url;
+  //   link.download = `localStorage-backup-${Date.now()}.json`;
+  //   document.body.appendChild(link);
+  //   link.click();
+  //   document.body.removeChild(link);
+  // }
+
+  // function handleRestoreLocalStorage(e) {
+  //   const file = e.target.files[0];
+  //   if (!file) return;
+
+  //   const reader = new FileReader();
+  //   reader.onload = function (event) {
+  //     try {
+  //       const backupData = JSON.parse(event.target.result);
+
+  //       // Check for key collisions
+  //       const overlappingKeys = Object.keys(backupData).filter(
+  //         (key) => localStorage.getItem(key) !== null
+  //       );
+
+  //       if (
+  //         overlappingKeys.length > 0 &&
+  //         !confirm(
+  //           `⚠️ Warning: ${overlappingKeys.length} existing key(s) will be overwritten.\nContinue restoring?`
+  //         )
+  //       ) {
+  //         alert("❌ Restore cancelled.");
+  //         return;
+  //       }
+
+  //       // Safe to restore
+  //       for (const key in backupData) {
+  //         localStorage.setItem(key, backupData[key]);
+  //       }
+
+  //       alert("✅ localStorage restored!");
+  //       location.reload(); // Optional: refresh app
+  //     } catch (err) {
+  //       alert("❌ Invalid file or format.");
+  //     }
+  //   };
+  //   reader.readAsText(file);
+  // }
+
+  const handleBackupLocalStorage = () => {
+    // Convert localStorage into a plain object with string key-value pairs
+    const backupData = Object.fromEntries(Object.entries(localStorage));
+
+    const blob = new Blob([JSON.stringify(backupData)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+
+    // Human-readable filename like ChickenHauz-Tue-8-4-25-1555h.json
+    const now = new Date();
+    const day = now.toLocaleDateString("en-US", { weekday: "short" }); // Tue
+    const month = now.getMonth() + 1;
+    const date = now.getDate();
+    const year = now.getFullYear().toString().slice(-2);
+    const hours = now.getHours().toString().padStart(2, "0");
+    const minutes = now.getMinutes().toString().padStart(2, "0");
+
+    const filename = `ChickenHauz-${day}-${month}-${date}-${year}-${hours}${minutes}h.json`;
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+
+    toast.success("\u2705 Backup downloaded!");
+  };
+
+
+  function handleRestoreLocalStorage(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function (event) {
+      try {
+        const backupData = JSON.parse(event.target.result);
+
+        // Validate structure
+        if (typeof backupData !== "object" || backupData === null) {
+          throw new Error("Invalid backup format");
+        }
+
+        // Check for key collisions
+        const overlappingKeys = Object.keys(backupData).filter(
+          (key) => localStorage.getItem(key) !== null
+        );
+
+        if (
+          overlappingKeys.length > 0 &&
+          !confirm(
+            `⚠️ ${overlappingKeys.length} existing key(s) will be overwritten.\nContinue restoring?`
+          )
+        ) {
+          alert("❌ Restore cancelled.");
+          return;
+        }
+
+        // Restore data
+        for (const [key, value] of Object.entries(backupData)) {
+          localStorage.setItem(key, value);
+        }
+
+        alert("✅ localStorage restored!");
+        location.reload(); // Optional
+      } catch (err) {
+        alert("❌ Invalid file or corrupted JSON.");
+      }
+    };
+    reader.readAsText(file);
+  }
+
+
+
 
   // Handle delete sale
   const confirmDelete = () => {
@@ -347,20 +476,57 @@ export default function SalesHistory() {
           )}
         </div>
 
-        {/* 📤 Export Buttons */}
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={exportCSV}
-            className="px-4 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700"
-          >
-            📄 Export CSV
-          </button>
-          <button
-            onClick={() => exportSalesToXlsx(filteredSales)}
-            className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            📊 Export XLSX
-          </button>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-2 rounded">
+          {/* 📊 Export Buttons */}
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={exportCSV}
+              className="px-4 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700"
+            >
+              📄 Export CSV
+            </button>
+            <button
+              onClick={() => exportSalesToXlsx(filteredSales)}
+              className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              📊 Export XLSX
+            </button>
+            <button
+              onClick={handleBackupLocalStorage}
+              className="px-4 py-2 text-sm bg-green-700 text-white rounded hover:bg-green-800"
+            >
+              📥 Backup Data
+            </button>
+          </div>
+
+          {/* 📤 Restore Upload */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <label className="relative text-sm cursor-pointer">
+              <span className="bg-yellow-500 text-white px-3 py-2 rounded hover:bg-yellow-600">
+                📤 Restore Backup
+              </span>
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleRestoreLocalStorage}
+                className="absolute inset-0 opacity-0 cursor-pointer"
+              />
+            </label>
+
+            {selectedBackupFile && (
+              <div className="flex items-center gap-2 bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-xs max-w-full">
+                <span className="truncate max-w-[160px]">
+                  📁 {selectedBackupFile.name}
+                </span>
+                <button
+                  onClick={() => setSelectedBackupFile(null)}
+                  className="hover:bg-red-100 text-red-500 hover:text-red-700 rounded-full px-1"
+                >
+                  ❌
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
