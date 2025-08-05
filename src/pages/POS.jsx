@@ -6,6 +6,11 @@ const allMenuItems = JSON.parse(localStorage.getItem("menu") || "[]");
 const CATEGORIES = [...new Set(allMenuItems.map((item) => item.category))];
 
 export default function POS() {
+  const [cashOnHand, setCashOnHand] = useState(() => {
+    const stored = localStorage.getItem("cashOnHand");
+    return stored ? parseFloat(stored) : 0;
+  });
+
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   const [cash, setCash] = useState("");
   const [search, setSearch] = useState("");
@@ -29,6 +34,10 @@ export default function POS() {
     const stored = localStorage.getItem("tables");
     return stored ? JSON.parse(stored) : defaultTables;
   });
+
+  useEffect(() => {
+    localStorage.setItem("cashOnHand", cashOnHand.toString());
+  }, [cashOnHand]);
 
   useEffect(() => {
     localStorage.setItem("tables", JSON.stringify(tables));
@@ -132,11 +141,29 @@ export default function POS() {
       change: paidAmount - total,
     };
 
+    // Update cash on hand (only add total kept by store, not change)
+    const currentCash = parseFloat(localStorage.getItem("cashOnHand") || "0");
+    if (paidAmount - total > currentCash) {
+      return toast.error("Not enough cash in drawer to give change.", {
+        duration: 4000,
+        style: {
+          background: "#fee2e2",
+          color: "#991b1b",
+          border: "1px solid #fca5a5",
+        },
+      });
+    }
+    localStorage.setItem("cashOnHand", (currentCash + total).toFixed(2));
+
+    // If you want to sync visually (optional)
+    window.dispatchEvent(new Event("storage"));
+
     const history = JSON.parse(localStorage.getItem("sales") || "[]");
     history.push(receipt);
     localStorage.setItem("sales", JSON.stringify(history));
 
     const updatedOrders = { ...orders, [selectedTable.id]: [] };
+    setCashOnHand((prev) => prev + total);
     setOrders(updatedOrders);
     setCash("");
     setIsCheckoutOpen(false);
@@ -244,7 +271,6 @@ export default function POS() {
       },
     });
   };
-
 
   const resetTablesToDefault = () => {
     const extraTables = tables.filter((t) => t.id > 20);

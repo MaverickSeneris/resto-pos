@@ -6,7 +6,9 @@ import { toast } from "react-hot-toast";
 
 export default function SalesHistory() {
   const [selectedBackupFile, setSelectedBackupFile] = useState(null);
-
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [amountToAdd, setAmountToAdd] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
   const [sales, setSales] = useState([]);
   const [filterDate, setFilterDate] = useState("");
   const [deleteId, setDeleteId] = useState(null);
@@ -182,57 +184,7 @@ export default function SalesHistory() {
     );
   });
 
-  // function handleBackupLocalStorage() {
-  //   const data = { ...localStorage };
-  //   const blob = new Blob([JSON.stringify(data, null, 2)], {
-  //     type: "application/json",
-  //   });
-  //   const url = URL.createObjectURL(blob);
-  //   const link = document.createElement("a");
-  //   link.href = url;
-  //   link.download = `localStorage-backup-${Date.now()}.json`;
-  //   document.body.appendChild(link);
-  //   link.click();
-  //   document.body.removeChild(link);
-  // }
-
-  // function handleRestoreLocalStorage(e) {
-  //   const file = e.target.files[0];
-  //   if (!file) return;
-
-  //   const reader = new FileReader();
-  //   reader.onload = function (event) {
-  //     try {
-  //       const backupData = JSON.parse(event.target.result);
-
-  //       // Check for key collisions
-  //       const overlappingKeys = Object.keys(backupData).filter(
-  //         (key) => localStorage.getItem(key) !== null
-  //       );
-
-  //       if (
-  //         overlappingKeys.length > 0 &&
-  //         !confirm(
-  //           `⚠️ Warning: ${overlappingKeys.length} existing key(s) will be overwritten.\nContinue restoring?`
-  //         )
-  //       ) {
-  //         alert("❌ Restore cancelled.");
-  //         return;
-  //       }
-
-  //       // Safe to restore
-  //       for (const key in backupData) {
-  //         localStorage.setItem(key, backupData[key]);
-  //       }
-
-  //       alert("✅ localStorage restored!");
-  //       location.reload(); // Optional: refresh app
-  //     } catch (err) {
-  //       alert("❌ Invalid file or format.");
-  //     }
-  //   };
-  //   reader.readAsText(file);
-  // }
+ 
 
   const handleBackupLocalStorage = () => {
     // Convert localStorage into a plain object with string key-value pairs
@@ -384,6 +336,8 @@ export default function SalesHistory() {
 
   return (
     <div className="p-4">
+     
+
       {/* 🔘 Quick Filter Buttons */}
       {/* 🔽 Filter Toggle */}
       <div className="mb-2 flex justify-between items-center">
