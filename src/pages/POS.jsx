@@ -1,4 +1,3 @@
-// import { defaultTables } from "../data/defaultTables.js";
 import { tables as defaultTables } from "../data/tables.js";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
