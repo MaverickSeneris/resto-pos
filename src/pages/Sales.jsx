@@ -134,7 +134,7 @@ export default function SalesHistory() {
 
   // Handle delete sale
   const confirmDelete = () => {
-    if (password !== "admin123") {
+    if (password !== import.meta.env.VITE_ADMIN_PASSWORD) {
       alert("❌ Wrong password.");
       return;
     }
